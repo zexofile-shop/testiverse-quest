@@ -325,9 +325,9 @@ function TestRunner() {
         </div>
       </header>
 
-      <div className="mx-auto grid w-full max-w-7xl flex-1 grid-cols-1 gap-6 px-4 py-6 sm:px-6 lg:grid-cols-[1fr_320px]">
+      <div className="mx-auto grid w-full max-w-7xl flex-1 grid-cols-1 gap-4 px-3 py-3 sm:gap-6 sm:px-6 sm:py-4 lg:grid-cols-[1fr_320px]">
         {/* Question card */}
-        <main className="rounded-3xl border-2 border-ink/10 bg-card p-4 shadow-soft sm:p-6">
+        <main className="rounded-xl border border-ink/10 bg-card p-4 shadow-soft sm:p-6">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div className="flex flex-wrap items-center gap-2">
               <span className="inline-flex items-center gap-1.5 rounded-full bg-foreground px-3 py-1.5 text-xs font-bold text-background">
