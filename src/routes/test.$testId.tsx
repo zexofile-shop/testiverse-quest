@@ -468,7 +468,7 @@ function TestRunner() {
         </main>
 
         {/* Desktop palette */}
-        <aside className="hidden rounded-3xl border-2 border-ink/10 bg-card p-5 shadow-soft lg:sticky lg:top-24 lg:block lg:self-start">
+        <aside className="hidden rounded-xl border border-ink/10 bg-card p-5 shadow-soft lg:sticky lg:top-24 lg:block lg:self-start">
           <PaletteContent
             questions={questions}
             current={current}
