@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
+import { useMemo } from "react";
 import { fetchTests } from "@/lib/testApi";
 import { buildCategories } from "@/lib/categories";
 import { Navbar } from "@/components/site/Navbar";
@@ -26,7 +27,10 @@ export const Route = createFileRoute("/")({
           "Practice with exam-grade mock tests for Class 10, 11/12 JEE, NEET and GATE. Full-screen test mode, instant scoring, real exam feel.",
       },
       { property: "og:title", content: "VidyaX by EduSpark — Smart Test Series" },
-      { property: "og:description", content: "Exam-grade mocks for JEE, NEET, GATE & school exams." },
+      {
+        property: "og:description",
+        content: "Exam-grade mocks for JEE, NEET, GATE & school exams.",
+      },
     ],
   }),
   component: HomePage,
@@ -34,7 +38,7 @@ export const Route = createFileRoute("/")({
 
 function HomePage() {
   const { data: tests, isLoading } = useQuery({ queryKey: ["tests"], queryFn: fetchTests });
-  const categories = buildCategories(tests ?? []);
+  const categories = useMemo(() => buildCategories(tests ?? []), [tests]);
   const totalTests = tests?.length ?? 0;
 
   return (
@@ -52,10 +56,12 @@ function HomePage() {
                 VidyaX · an EduSpark initiative
               </span>
               <h1 className="mt-5 font-display text-4xl font-bold leading-[1.02] tracking-tight text-foreground sm:text-5xl lg:text-6xl">
-                Crack <span className="text-primary">JEE, NEET, boards</span> &amp; other competitive exams with exam-grade mocks.
+                Crack <span className="text-primary">JEE, NEET, boards</span> &amp; other
+                competitive exams with exam-grade mocks.
               </h1>
               <p className="mt-5 max-w-xl text-base text-muted-foreground sm:text-lg">
-                Pick your class, pick your stream, attempt full-screen tests that feel like the real exam. Instant scoring. No distractions.
+                Pick your class, pick your stream, attempt full-screen tests that feel like the real
+                exam. Instant scoring. No distractions.
               </p>
               <div className="mt-7 flex flex-wrap items-center gap-3">
                 <Link
@@ -75,13 +81,23 @@ function HomePage() {
 
               <div className="mt-10 flex max-w-md flex-wrap gap-x-8 gap-y-4 text-left">
                 {[
-                  { k: isLoading ? "…" : String(totalTests || 0), v: totalTests === 1 ? "Active test" : "Active tests" },
-                  { k: isLoading ? "…" : String(categories.length || 0), v: categories.length === 1 ? "Category" : "Categories" },
+                  {
+                    k: isLoading ? "…" : String(totalTests || 0),
+                    v: totalTests === 1 ? "Active test" : "Active tests",
+                  },
+                  {
+                    k: isLoading ? "…" : String(categories.length || 0),
+                    v: categories.length === 1 ? "Category" : "Categories",
+                  },
                   { k: "Free", v: "No signup needed" },
                 ].map((s) => (
                   <div key={s.v}>
-                    <div className="font-display text-3xl font-bold text-foreground tabular-nums">{s.k}</div>
-                    <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{s.v}</div>
+                    <div className="font-display text-3xl font-bold text-foreground tabular-nums">
+                      {s.k}
+                    </div>
+                    <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                      {s.v}
+                    </div>
                   </div>
                 ))}
               </div>
@@ -93,7 +109,11 @@ function HomePage() {
               <div className="relative overflow-hidden rounded-3xl border-2 border-ink bg-foreground p-8 text-background shadow-elevated">
                 <div className="absolute inset-0 grid-bg opacity-20" />
                 <div className="relative flex items-center gap-4">
-                  <img src={logoVx} alt="VidyaX" className="h-16 w-16 rounded-2xl ring-2 ring-background/30" />
+                  <img
+                    src={logoVx}
+                    alt="VidyaX"
+                    className="h-16 w-16 rounded-2xl ring-2 ring-background/30"
+                  />
                   <div>
                     <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-background/60">
                       The platform
@@ -101,7 +121,9 @@ function HomePage() {
                     <div className="font-display text-2xl font-bold">
                       Vidya<span className="text-primary-glow">X</span>
                     </div>
-                    <div className="text-xs font-semibold text-background/70">an EduSpark initiative</div>
+                    <div className="text-xs font-semibold text-background/70">
+                      an EduSpark initiative
+                    </div>
                   </div>
                 </div>
                 <div className="relative mt-6 grid grid-cols-2 gap-3">
@@ -111,7 +133,10 @@ function HomePage() {
                     { icon: BarChart3, label: "Instant score breakdown" },
                     { icon: ShieldCheck, label: "No signup needed" },
                   ].map((f) => (
-                    <div key={f.label} className="flex items-center gap-2 rounded-xl border border-background/15 bg-background/5 p-3">
+                    <div
+                      key={f.label}
+                      className="flex items-center gap-2 rounded-xl border border-background/15 bg-background/5 p-3"
+                    >
                       <f.icon className="h-4 w-4 text-primary-glow" />
                       <span className="text-xs font-semibold">{f.label}</span>
                     </div>
@@ -143,7 +168,11 @@ function HomePage() {
 
           <div className="mt-10 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3">
             {[
-              { icon: Maximize, title: "Full-screen mode", desc: "Distraction-free, real exam feel." },
+              {
+                icon: Maximize,
+                title: "Full-screen mode",
+                desc: "Distraction-free, real exam feel.",
+              },
               { icon: Timer, title: "Live timer", desc: "Countdown with auto-submit." },
               { icon: Brain, title: "Smart navigation", desc: "Prev/Next + palette drawer." },
               { icon: BarChart3, title: "Instant scoring", desc: "Subject-wise breakdown." },
@@ -159,7 +188,9 @@ function HomePage() {
                   <f.icon className="h-4 w-4" />
                 </div>
                 <h3 className="mt-2.5 font-display text-sm font-bold sm:text-base">{f.title}</h3>
-                <p className="mt-1 text-xs leading-snug text-muted-foreground sm:text-[13px]">{f.desc}</p>
+                <p className="mt-1 text-xs leading-snug text-muted-foreground sm:text-[13px]">
+                  {f.desc}
+                </p>
               </div>
             ))}
           </div>
@@ -224,11 +255,26 @@ function HomePage() {
         </div>
         <div className="mt-10 divide-y-2 divide-ink/10 rounded-2xl border-2 border-ink/10 bg-card">
           {[
-            { q: "Do I need to sign up to attempt a test?", a: "No. Pick a category, open any test, and start instantly — no account, no email, no friction." },
-            { q: "Does the test run in full-screen?", a: "Yes. The moment you hit Start Test, VidyaX goes full-screen for a distraction-free exam feel. Press Esc anytime to exit." },
-            { q: "Can I navigate between questions freely?", a: "Yes. Use the big Previous / Next buttons or open the palette drawer to jump anywhere in the paper." },
-            { q: "What happens when time runs out?", a: "The test auto-submits with whatever answers you've marked and takes you straight to your detailed result." },
-            { q: "Is my progress saved if I refresh?", a: "Yes. Your answers, marks-for-review and remaining time are saved locally so you can resume mid-test." },
+            {
+              q: "Do I need to sign up to attempt a test?",
+              a: "No. Pick a category, open any test, and start instantly — no account, no email, no friction.",
+            },
+            {
+              q: "Does the test run in full-screen?",
+              a: "Yes. The moment you hit Start Test, VidyaX goes full-screen for a distraction-free exam feel. Press Esc anytime to exit.",
+            },
+            {
+              q: "Can I navigate between questions freely?",
+              a: "Yes. Use the big Previous / Next buttons or open the palette drawer to jump anywhere in the paper.",
+            },
+            {
+              q: "What happens when time runs out?",
+              a: "The test auto-submits with whatever answers you've marked and takes you straight to your detailed result.",
+            },
+            {
+              q: "Is my progress saved if I refresh?",
+              a: "Yes. Your answers, marks-for-review and remaining time are saved locally so you can resume mid-test.",
+            },
           ].map((item, i) => (
             <details
               key={item.q}
@@ -246,7 +292,6 @@ function HomePage() {
           ))}
         </div>
       </section>
-
 
       <Footer />
     </div>

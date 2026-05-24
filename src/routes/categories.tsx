@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
+import { useMemo } from "react";
 import { fetchTests } from "@/lib/testApi";
 import { buildCategories } from "@/lib/categories";
 import { Navbar } from "@/components/site/Navbar";
@@ -11,7 +12,10 @@ export const Route = createFileRoute("/categories")({
   head: () => ({
     meta: [
       { title: "All Categories — VidyaX by EduSpark" },
-      { name: "description", content: "Browse all test categories — JEE, NEET, GATE, Class 10 boards & more." },
+      {
+        name: "description",
+        content: "Browse all test categories — JEE, NEET, GATE, Class 10 boards & more.",
+      },
       { property: "og:title", content: "All Categories — VidyaX" },
       { property: "og:description", content: "Pick a stream to see its mock tests." },
     ],
@@ -21,7 +25,7 @@ export const Route = createFileRoute("/categories")({
 
 function CategoriesPage() {
   const { data: tests, isLoading } = useQuery({ queryKey: ["tests"], queryFn: fetchTests });
-  const categories = buildCategories(tests ?? []);
+  const categories = useMemo(() => buildCategories(tests ?? []), [tests]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -49,7 +53,10 @@ function CategoriesPage() {
         {isLoading ? (
           <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3">
             {Array.from({ length: 8 }).map((_, i) => (
-              <div key={i} className="h-40 animate-pulse rounded-2xl border-2 border-ink/10 bg-muted" />
+              <div
+                key={i}
+                className="h-40 animate-pulse rounded-2xl border-2 border-ink/10 bg-muted"
+              />
             ))}
           </div>
         ) : (

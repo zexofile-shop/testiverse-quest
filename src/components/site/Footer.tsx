@@ -15,18 +15,28 @@ export function Footer() {
               </span>
             </div>
             <p className="mt-3 max-w-md text-sm text-background/70">
-              Smart test series for JEE, NEET, GATE and school exams. Built to feel like the real thing.
+              Smart test series for JEE, NEET, GATE and school exams. Built to feel like the real
+              thing.
             </p>
           </div>
           <div className="flex flex-wrap gap-x-8 gap-y-2 text-sm font-medium text-background/70">
-            <a href="#features" className="hover:text-background transition-colors">Features</a>
-            <a href="#faq" className="hover:text-background transition-colors">FAQ</a>
-            <a href="#" className="hover:text-background transition-colors">Privacy</a>
-            <a href="#" className="hover:text-background transition-colors">Terms</a>
+            <a href="#features" className="hover:text-background transition-colors">
+              Features
+            </a>
+            <a href="#faq" className="hover:text-background transition-colors">
+              FAQ
+            </a>
+            <a href="#" className="hover:text-background transition-colors">
+              Privacy
+            </a>
+            <a href="#" className="hover:text-background transition-colors">
+              Terms
+            </a>
           </div>
         </div>
         <div className="mt-10 border-t border-background/15 pt-6 text-xs text-background/60">
-          © {new Date().getFullYear()} VidyaX · An EduSpark learning platform. Crafted for serious aspirants.
+          © {new Date().getFullYear()} VidyaX · An EduSpark learning platform. Crafted for serious
+          aspirants.
         </div>
       </div>
     </footer>

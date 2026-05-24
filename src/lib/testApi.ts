@@ -45,9 +45,7 @@ export async function fetchTests(): Promise<Test[]> {
   // Hide any internal/in-progress tests that have "testing" in their name
   // or description so they never appear in any listing.
   return data.filter(
-    (t) =>
-      !/testing/i.test(t.name ?? "") &&
-      !/testing/i.test(t.description ?? ""),
+    (t) => !/testing/i.test(t.name ?? "") && !/testing/i.test(t.description ?? ""),
   );
 }
 

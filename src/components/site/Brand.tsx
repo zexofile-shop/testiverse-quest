@@ -1,11 +1,19 @@
 import logo from "@/assets/logo-vx.jpg";
 
-export function Brand({ size = "md", showSub = true }: { size?: "sm" | "md" | "lg"; showSub?: boolean }) {
+export function Brand({
+  size = "md",
+  showSub = true,
+}: {
+  size?: "sm" | "md" | "lg";
+  showSub?: boolean;
+}) {
   const dims = size === "lg" ? "h-12 w-12" : size === "sm" ? "h-8 w-8" : "h-10 w-10";
   const title = size === "lg" ? "text-2xl" : size === "sm" ? "text-base" : "text-lg";
   return (
     <div className="flex items-center gap-2.5">
-      <span className={`relative inline-flex ${dims} items-center justify-center overflow-hidden rounded-xl ring-2 ring-ink shadow-soft`}>
+      <span
+        className={`relative inline-flex ${dims} items-center justify-center overflow-hidden rounded-xl ring-2 ring-ink shadow-soft`}
+      >
         <img src={logo} alt="VidyaX by EduSpark" className="h-full w-full object-cover" />
       </span>
       <div className="leading-tight">

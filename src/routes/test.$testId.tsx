@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   correctIndex,
   detectOptionStyle,
@@ -77,6 +77,21 @@ function TestRunner() {
   const [reviewed, setReviewed] = useState<boolean[]>([]);
   const [visited, setVisited] = useState<boolean[]>([]);
   const [secondsLeft, setSecondsLeft] = useState(0);
+
+  const statuses: Status[] = useMemo(() => {
+    return answers.map((a, i) => {
+      if (reviewed[i]) return "review";
+      if (a !== null && a !== undefined) return "answered";
+      if (visited[i]) return "visited";
+      return "unseen";
+    });
+  }, [answers, reviewed, visited]);
+
+  const answeredCount = useMemo(
+    () => answers.filter((a) => a !== null && a !== undefined).length,
+    [answers],
+  );
+
   const [paletteOpen, setPaletteOpen] = useState(false);
   const submittedRef = useRef(false);
   const hydratedRef = useRef(false);
@@ -190,7 +205,11 @@ function TestRunner() {
         questions={questions}
         answers={answers}
         onRetake={() => {
-          try { localStorage.removeItem(storageKey); } catch { /* ignore */ }
+          try {
+            localStorage.removeItem(storageKey);
+          } catch {
+            /* ignore */
+          }
           hydratedRef.current = false;
           setAnswers([]);
           setReviewed([]);
@@ -200,7 +219,11 @@ function TestRunner() {
           setPhase("intro");
         }}
         onHome={() => {
-          try { localStorage.removeItem(storageKey); } catch { /* ignore */ }
+          try {
+            localStorage.removeItem(storageKey);
+          } catch {
+            /* ignore */
+          }
           navigate({ to: "/categories" });
         }}
       />
@@ -229,33 +252,40 @@ function TestRunner() {
     });
   };
 
-  const go = (idx: number) => {
-    setCurrent(idx);
-    setVisited((prev) => {
-      if (prev[idx]) return prev;
-      const next = [...prev];
-      next[idx] = true;
-      return next;
-    });
-    setPaletteOpen(false);
-  };
+  const go = useCallback(
+    (idx: number) => {
+      setCurrent(idx);
+      setVisited((prev) => {
+        if (prev[idx]) return prev;
+        const next = [...prev];
+        next[idx] = true;
+        return next;
+      });
+      setPaletteOpen(false);
+    },
+    [setCurrent, setVisited, setPaletteOpen],
+  );
 
-  const toggleReview = () => {
+  const toggleReview = useCallback(() => {
     setReviewed((prev) => {
       const next = [...prev];
       next[current] = !next[current];
       return next;
     });
-  };
+  }, [current, setReviewed]);
 
-  const submit = () => {
+  const submit = useCallback(() => {
     exitFullscreen();
     setPhase("result");
-  };
+  }, [setPhase]);
 
   const quit = () => {
     if (!window.confirm("Quit this test? Your progress will be lost.")) return;
-    try { localStorage.removeItem(storageKey); } catch { /* ignore */ }
+    try {
+      localStorage.removeItem(storageKey);
+    } catch {
+      /* ignore */
+    }
     exitFullscreen();
     hydratedRef.current = false;
     submittedRef.current = false;
@@ -266,15 +296,6 @@ function TestRunner() {
     setPhase("intro");
     navigate({ to: "/categories" });
   };
-
-  const statuses: Status[] = answers.map((a, i) => {
-    if (reviewed[i]) return "review";
-    if (a !== null && a !== undefined) return "answered";
-    if (visited[i]) return "visited";
-    return "unseen";
-  });
-
-  const answeredCount = answers.filter((a) => a !== null && a !== undefined).length;
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
@@ -289,7 +310,11 @@ function TestRunner() {
             >
               <Home className="h-4 w-4" />
             </Link>
-            <img src={logoVx} alt="" className="hidden h-9 w-9 shrink-0 rounded-lg ring-2 ring-background/20 sm:block" />
+            <img
+              src={logoVx}
+              alt=""
+              className="hidden h-9 w-9 shrink-0 rounded-lg ring-2 ring-background/20 sm:block"
+            />
             <div className="min-w-0 leading-tight">
               <div className="truncate text-[10px] font-bold uppercase tracking-[0.18em] text-background/60">
                 VidyaX · {test.stream ?? "Test"}
@@ -335,7 +360,9 @@ function TestRunner() {
                 <span className="text-background/60">/ {questions.length}</span>
               </span>
               {q.subject && (
-                <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider ${subjectChipClass(q.subject)}`}>
+                <span
+                  className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider ${subjectChipClass(q.subject)}`}
+                >
                   {q.subject}
                 </span>
               )}
@@ -349,7 +376,6 @@ function TestRunner() {
               </span>
             </div>
           </div>
-
 
           {q.question_text ? (
             <h2 className="mt-4 text-[15px] font-semibold leading-relaxed text-foreground sm:text-base">
@@ -404,9 +430,7 @@ function TestRunner() {
                       Option {label}
                     </span>
                   )}
-                  {selected && (
-                    <CheckCircle2 className="h-5 w-5 shrink-0 text-primary" />
-                  )}
+                  {selected && <CheckCircle2 className="h-5 w-5 shrink-0 text-primary" />}
                 </button>
               );
             })}
@@ -426,7 +450,13 @@ function TestRunner() {
               {reviewed[current] ? "Marked for review" : "Mark for review"}
             </button>
             <button
-              onClick={() => setAnswers((p) => { const n = [...p]; n[current] = null; return n; })}
+              onClick={() =>
+                setAnswers((p) => {
+                  const n = [...p];
+                  n[current] = null;
+                  return n;
+                })
+              }
               className="inline-flex items-center gap-1.5 rounded-full border-2 border-ink/20 bg-card px-4 py-2 text-xs font-bold text-foreground transition-colors hover:border-foreground hover:bg-accent/40"
             >
               Clear answer
@@ -533,7 +563,7 @@ function TestRunner() {
   );
 }
 
-function PaletteContent({
+const PaletteContent = memo(function PaletteContent({
   questions,
   current,
   statuses,
@@ -549,18 +579,21 @@ function PaletteContent({
   onSubmit: () => void;
 }) {
   // Group by subject, preserving the order subjects first appear in.
-  const groups: { subject: string; items: { idx: number }[] }[] = [];
-  const seen = new Map<string, number>();
-  questions.forEach((q, idx) => {
-    const subj = q.subject || "General";
-    let gi = seen.get(subj);
-    if (gi === undefined) {
-      gi = groups.length;
-      seen.set(subj, gi);
-      groups.push({ subject: subj, items: [] });
-    }
-    groups[gi].items.push({ idx });
-  });
+  const groups = useMemo(() => {
+    const res: { subject: string; items: { idx: number }[] }[] = [];
+    const seen = new Map<string, number>();
+    questions.forEach((q, idx) => {
+      const subj = q.subject || "General";
+      let gi = seen.get(subj);
+      if (gi === undefined) {
+        gi = res.length;
+        seen.set(subj, gi);
+        res.push({ subject: subj, items: [] });
+      }
+      res[gi].items.push({ idx });
+    });
+    return res;
+  }, [questions]);
 
   return (
     <>
@@ -577,7 +610,9 @@ function PaletteContent({
           return (
             <div key={g.subject}>
               <div className="mb-2 flex items-center justify-between">
-                <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider ${subjectChipClass(g.subject)}`}>
+                <span
+                  className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider ${subjectChipClass(g.subject)}`}
+                >
                   {g.subject}
                 </span>
                 <span className="text-[10px] font-bold tabular-nums text-muted-foreground">
@@ -618,7 +653,7 @@ function PaletteContent({
       </button>
     </>
   );
-}
+});
 
 /**
  * Colour-codes a subject chip. Matches Physics/Chemistry/Biology/Maths
@@ -650,7 +685,6 @@ function paletteClass(status: Status, active: boolean) {
       return ring + "border-ink/15 bg-card text-muted-foreground";
   }
 }
-
 
 function Legend({ dot, label }: { dot: string; label: string }) {
   return (
@@ -716,9 +750,13 @@ function IntroScreen({
                   VidyaX · {test.stream ?? "Test"} · {test.category ?? "Mock"}
                 </div>
               </div>
-              <h1 className="mt-3 font-display text-3xl font-bold leading-[1.05] sm:text-4xl">{test.name}</h1>
+              <h1 className="mt-3 font-display text-3xl font-bold leading-[1.05] sm:text-4xl">
+                {test.name}
+              </h1>
               {test.description && (
-                <p className="mt-2 max-w-2xl text-sm text-background/80 sm:text-base">{test.description}</p>
+                <p className="mt-2 max-w-2xl text-sm text-background/80 sm:text-base">
+                  {test.description}
+                </p>
               )}
             </div>
           </div>
@@ -756,7 +794,11 @@ function IntroScreen({
               {questionCount === 0 ? "No questions available" : "Start Test in Full-Screen"}
             </button>
             <div className="mt-2 text-center text-[11px] font-semibold text-muted-foreground">
-              Press <kbd className="rounded border border-ink/20 bg-muted px-1.5 py-0.5 text-[10px]">Esc</kbd> any time to exit full-screen
+              Press{" "}
+              <kbd className="rounded border border-ink/20 bg-muted px-1.5 py-0.5 text-[10px]">
+                Esc
+              </kbd>{" "}
+              any time to exit full-screen
             </div>
           </div>
         </div>
@@ -769,7 +811,9 @@ function Stat({ label, value, border }: { label: string; value: string; border?:
   return (
     <div className={`px-4 py-5 text-center ${border ? "border-x-2 border-ink/10" : ""}`}>
       <div className="font-display text-xl font-bold text-foreground sm:text-2xl">{value}</div>
-      <div className="mt-0.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{label}</div>
+      <div className="mt-0.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+        {label}
+      </div>
     </div>
   );
 }
@@ -871,9 +915,12 @@ function ResultScreen({
                 <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-background/60">
                   VidyaX · Score Report
                 </div>
-                <h1 className="mt-1 truncate font-display text-2xl font-bold sm:text-3xl">{test.name}</h1>
+                <h1 className="mt-1 truncate font-display text-2xl font-bold sm:text-3xl">
+                  {test.name}
+                </h1>
                 <div className="mt-1 text-[11px] font-semibold text-background/70">
-                  {test.stream ?? "Mock"} · {questions.length} questions · {test.duration_minutes} min
+                  {test.stream ?? "Mock"} · {questions.length} questions · {test.duration_minutes}{" "}
+                  min
                 </div>
               </div>
             </div>
@@ -887,7 +934,12 @@ function ResultScreen({
                   className={`relative inline-flex h-36 w-36 items-center justify-center rounded-full ring-4 ring-offset-4 ring-offset-card ${grade.ring}`}
                   style={{
                     background: `conic-gradient(currentColor ${pct * 3.6}deg, oklch(0.92 0.02 250) 0deg)`,
-                    color: pct >= 50 ? "var(--success)" : pct >= 35 ? "var(--warning)" : "var(--destructive)",
+                    color:
+                      pct >= 50
+                        ? "var(--success)"
+                        : pct >= 35
+                          ? "var(--warning)"
+                          : "var(--destructive)",
                   }}
                 >
                   <div className="flex h-28 w-28 flex-col items-center justify-center rounded-full bg-card">
@@ -899,7 +951,9 @@ function ResultScreen({
                     </div>
                   </div>
                 </div>
-                <div className={`mt-3 inline-flex items-center gap-1.5 rounded-full bg-card px-3 py-1 text-xs font-bold ${grade.tone}`}>
+                <div
+                  className={`mt-3 inline-flex items-center gap-1.5 rounded-full bg-card px-3 py-1 text-xs font-bold ${grade.tone}`}
+                >
                   <Trophy className="h-3.5 w-3.5" />
                   {grade.label}
                 </div>
@@ -921,7 +975,11 @@ function ResultScreen({
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
-                  <MiniStat label="Accuracy" value={`${accuracy}%`} hint={`${correct}/${attempted || 0} attempted`} />
+                  <MiniStat
+                    label="Accuracy"
+                    value={`${accuracy}%`}
+                    hint={`${correct}/${attempted || 0} attempted`}
+                  />
                   <MiniStat label="Attempted" value={`${attempted}`} hint={`${skipped} skipped`} />
                 </div>
               </div>
@@ -944,7 +1002,9 @@ function ResultScreen({
                   return (
                     <div key={k} className="rounded-2xl border-2 border-ink/10 bg-background p-4">
                       <div className="flex items-center justify-between">
-                        <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider ${subjectChipClass(k)}`}>
+                        <span
+                          className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider ${subjectChipClass(k)}`}
+                        >
                           {k}
                         </span>
                         <span className="text-xs font-bold tabular-nums text-muted-foreground">
@@ -967,7 +1027,6 @@ function ResultScreen({
             </div>
           )}
 
-
           {/* Answer review */}
           <div className="p-5 sm:p-8">
             <div className="flex items-center justify-between">
@@ -975,12 +1034,14 @@ function ResultScreen({
             </div>
 
             <div className="mt-3 flex flex-wrap gap-2">
-              {([
-                ["all", `All (${rows.length})`],
-                ["correct", `Correct (${correct})`],
-                ["wrong", `Wrong (${wrong})`],
-                ["skipped", `Skipped (${skipped})`],
-              ] as const).map(([key, label]) => (
+              {(
+                [
+                  ["all", `All (${rows.length})`],
+                  ["correct", `Correct (${correct})`],
+                  ["wrong", `Wrong (${wrong})`],
+                  ["skipped", `Skipped (${skipped})`],
+                ] as const
+              ).map(([key, label]) => (
                 <button
                   key={key}
                   onClick={() => setTab(key)}
@@ -1004,21 +1065,36 @@ function ResultScreen({
               {filtered.map(({ r, i }) => {
                 const stateMeta =
                   r.state === "correct"
-                    ? { label: "Correct", cls: "bg-success text-success-foreground", icon: CheckCircle2 }
+                    ? {
+                        label: "Correct",
+                        cls: "bg-success text-success-foreground",
+                        icon: CheckCircle2,
+                      }
                     : r.state === "wrong"
-                      ? { label: "Wrong", cls: "bg-destructive text-destructive-foreground", icon: XCircle }
+                      ? {
+                          label: "Wrong",
+                          cls: "bg-destructive text-destructive-foreground",
+                          icon: XCircle,
+                        }
                       : { label: "Skipped", cls: "bg-muted text-muted-foreground", icon: Flag };
                 const Icon = stateMeta.icon;
                 return (
-                  <div key={r.q.id} className="rounded-2xl border-2 border-ink/10 bg-card p-4 sm:p-5">
+                  <div
+                    key={r.q.id}
+                    className="rounded-2xl border-2 border-ink/10 bg-card p-4 sm:p-5"
+                  >
                     <div className="flex items-center justify-between gap-3">
                       <div className="flex items-center gap-2">
-                        <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-bold ${stateMeta.cls}`}>
+                        <span
+                          className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-bold ${stateMeta.cls}`}
+                        >
                           <Icon className="h-3.5 w-3.5" />
                           {stateMeta.label}
                         </span>
                         {r.q.subject && (
-                          <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider ${subjectChipClass(r.q.subject)}`}>
+                          <span
+                            className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider ${subjectChipClass(r.q.subject)}`}
+                          >
                             {r.q.subject}
                           </span>
                         )}
@@ -1162,8 +1238,6 @@ function MiniStat({ label, value, hint }: { label: string; value: string; hint?:
     </div>
   );
 }
-
-
 
 function FullPageLoader() {
   return (
