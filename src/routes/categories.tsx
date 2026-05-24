@@ -27,16 +27,16 @@ function CategoriesPage() {
     <div className="min-h-screen bg-background">
       <Navbar />
 
-      <section className="border-b-2 border-ink/10 bg-surface">
-        <div className="mx-auto max-w-7xl px-5 py-8 sm:px-6 sm:py-14">
+      <section className="border-b border-ink/10 bg-surface">
+        <div className="mx-auto max-w-7xl px-5 py-8 sm:px-6 sm:py-12">
           <Link
             to="/"
-            className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-muted-foreground transition-colors hover:text-foreground"
+            className="inline-flex items-center gap-1.5 text-xs font-semibold text-muted-foreground transition-colors hover:text-foreground"
           >
             <ChevronLeft className="h-4 w-4" /> Back to home
           </Link>
-          <div className="mt-4 text-xs font-bold uppercase tracking-[0.2em] text-primary">All Categories</div>
-          <h1 className="mt-2 font-display text-3xl font-bold tracking-tight sm:text-5xl">
+          <div className="mt-3 text-sm font-semibold text-primary">All categories</div>
+          <h1 className="mt-1 font-display text-3xl font-bold tracking-tight sm:text-4xl">
             What are you preparing for?
           </h1>
           <p className="mt-2 max-w-xl text-sm text-muted-foreground sm:text-base">
