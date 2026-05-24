@@ -141,7 +141,7 @@ function HomePage() {
             </p>
           </div>
 
-          <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="mt-12 grid grid-cols-2 gap-3 sm:gap-4">
             {[
               { icon: Maximize, title: "Full-screen mode", desc: "Tests auto-launch in distraction-free full-screen." },
               { icon: Timer, title: "Live timer", desc: "Persistent countdown with auto-submit when time ends." },
@@ -168,24 +168,36 @@ function HomePage() {
 
       {/* CTA */}
       <section className="mx-auto max-w-7xl px-5 py-20 sm:px-6">
-        <div className="relative overflow-hidden rounded-3xl border-2 border-ink bg-foreground p-8 text-background shadow-elevated sm:p-14">
-          <div className="absolute inset-0 grid-bg opacity-15" />
-          <div className="absolute -right-16 -top-16 h-64 w-64 rounded-full bg-primary/40 blur-3xl" />
+        <div className="relative overflow-hidden rounded-3xl border-2 border-ink bg-gradient-to-br from-primary via-primary-glow to-foreground p-8 text-background shadow-elevated sm:p-14">
+          <div className="absolute inset-0 grid-bg opacity-20" />
+          {/* Splash animations */}
+          <div
+            className="pointer-events-none absolute -right-20 -top-20 h-72 w-72 rounded-full bg-primary-glow/70 blur-3xl"
+            style={{ animation: "pulse-glow 3s ease-in-out infinite" }}
+          />
+          <div
+            className="pointer-events-none absolute -left-16 bottom-[-3rem] h-60 w-60 rounded-full bg-background/30 blur-3xl"
+            style={{ animation: "float 5s ease-in-out infinite" }}
+          />
+          <div
+            className="pointer-events-none absolute right-1/3 top-1/2 h-40 w-40 -translate-y-1/2 rounded-full bg-accent/40 blur-2xl"
+            style={{ animation: "pulse-glow 2.2s ease-in-out infinite", animationDelay: "0.6s" }}
+          />
           <div className="relative flex flex-col items-start gap-6 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-background/60">
+              <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-background/80">
                 VidyaX · by EduSpark
               </div>
               <h3 className="mt-2 font-display text-2xl font-bold sm:text-3xl">
                 Ready for your next mock?
               </h3>
-              <p className="mt-2 max-w-xl text-sm text-background/75">
+              <p className="mt-2 max-w-xl text-sm text-background/90">
                 Pick a category, attempt in full-screen, and see your score the moment you submit.
               </p>
             </div>
             <Link
               to="/categories"
-              className="inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3.5 text-sm font-bold text-primary-foreground shadow-soft transition-transform hover:scale-[1.03] active:scale-95"
+              className="inline-flex items-center gap-2 rounded-full bg-background px-6 py-3.5 text-sm font-bold text-foreground shadow-soft transition-transform hover:scale-[1.03] active:scale-95"
             >
               Browse categories <ArrowRight className="h-4 w-4" />
             </Link>
