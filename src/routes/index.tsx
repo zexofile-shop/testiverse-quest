@@ -49,10 +49,10 @@ function HomePage() {
             <div style={{ animation: "fade-up 0.5s both" }}>
               <span className="inline-flex items-center gap-2 rounded-full border-2 border-ink/10 bg-card px-3 py-1.5 text-xs font-bold uppercase tracking-wider text-foreground shadow-soft">
                 <GraduationCap className="h-3.5 w-3.5 text-primary" />
-                VidyaX · an EduSpark product
+                VidyaX · an EduSpark initiative
               </span>
               <h1 className="mt-5 font-display text-4xl font-bold leading-[1.02] tracking-tight text-foreground sm:text-5xl lg:text-6xl">
-                Crack <span className="text-primary">JEE, NEET</span> &amp; boards with exam-grade mocks.
+                Crack <span className="text-primary">JEE, NEET, boards</span> &amp; other competitive exams with exam-grade mocks.
               </h1>
               <p className="mt-5 max-w-xl text-base text-muted-foreground sm:text-lg">
                 Pick your class, pick your stream, attempt full-screen tests that feel like the real exam. Instant scoring. No distractions.
