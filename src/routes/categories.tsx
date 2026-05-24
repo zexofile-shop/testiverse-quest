@@ -5,6 +5,7 @@ import { buildCategories } from "@/lib/categories";
 import { Navbar } from "@/components/site/Navbar";
 import { Footer } from "@/components/site/Footer";
 import { ArrowRight, ChevronLeft } from "lucide-react";
+import logoVx from "@/assets/logo-vx.jpg";
 
 export const Route = createFileRoute("/categories")({
   head: () => ({
@@ -62,9 +63,9 @@ function CategoriesPage() {
                 style={{ animation: `fade-up 0.45s ${i * 30}ms both` }}
               >
                 <div className="flex items-start justify-between gap-2">
-                  <div className={`inline-flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br ${c.accent} text-white shadow-soft sm:h-12 sm:w-12`}>
-                    <c.icon className="h-5 w-5 sm:h-6 sm:w-6" />
-                  </div>
+                  <span className="inline-flex h-10 w-10 items-center justify-center overflow-hidden rounded-xl ring-2 ring-ink shadow-soft sm:h-12 sm:w-12">
+                    <img src={logoVx} alt="VidyaX" className="h-full w-full object-cover" />
+                  </span>
                   <span className="inline-flex items-center gap-1 rounded-full bg-foreground px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-background tabular-nums">
                     {c.count}
                   </span>

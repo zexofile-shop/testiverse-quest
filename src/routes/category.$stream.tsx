@@ -7,6 +7,7 @@ import { Navbar } from "@/components/site/Navbar";
 import { Footer } from "@/components/site/Footer";
 import { TestCard } from "@/components/site/TestCard";
 import { ChevronLeft, Search } from "lucide-react";
+import logoVx from "@/assets/logo-vx.jpg";
 
 export const Route = createFileRoute("/category/$stream")({
   head: ({ params }) => {
@@ -48,9 +49,9 @@ function CategoryPage() {
             <ChevronLeft className="h-4 w-4" /> All categories
           </Link>
           <div className="mt-5 flex flex-wrap items-center gap-4">
-            <div className={`inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br ${meta.accent} shadow-soft`}>
-              <meta.icon className="h-7 w-7 text-white" />
-            </div>
+            <span className="inline-flex h-14 w-14 items-center justify-center overflow-hidden rounded-2xl ring-2 ring-background/30 shadow-soft">
+              <img src={logoVx} alt="VidyaX" className="h-full w-full object-cover" />
+            </span>
             <div>
               <div className="text-[11px] font-bold uppercase tracking-[0.2em] text-background/60">Category</div>
               <h1 className="font-display text-3xl font-bold sm:text-4xl">{meta.label}</h1>
