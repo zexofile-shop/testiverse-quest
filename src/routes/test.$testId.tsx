@@ -690,23 +690,23 @@ function IntroScreen({
   onStart: () => void;
 }) {
   return (
-    <div className="min-h-screen bg-background">
-      <div className="mx-auto w-full max-w-5xl px-0 pb-10 pt-4 sm:px-6 sm:pb-14 sm:pt-10">
+    <div className="min-h-screen bg-surface">
+      <div className="mx-auto w-full max-w-5xl px-0 pb-6 pt-3 sm:px-6 sm:pb-10 sm:pt-6">
         <div className="px-4 sm:px-0">
           <Link
             to="/category/$stream"
             params={{ stream: encodeURIComponent(test.stream || "General") }}
-            className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-muted-foreground transition-colors hover:text-foreground"
+            className="inline-flex items-center gap-1.5 text-xs font-semibold text-muted-foreground transition-colors hover:text-foreground"
           >
             <ChevronLeft className="h-4 w-4" /> Back to {test.stream ?? "tests"}
           </Link>
         </div>
 
         <div
-          className="mt-4 overflow-hidden border-y-2 border-ink/10 bg-card shadow-elevated sm:mt-5 sm:rounded-3xl sm:border-2"
+          className="mt-3 overflow-hidden bg-card shadow-soft sm:mt-4 sm:rounded-2xl sm:border sm:border-ink/10"
           style={{ animation: "fade-up 0.4s both" }}
         >
-          <div className="relative bg-foreground p-6 text-background sm:p-10">
+          <div className="relative bg-foreground p-6 text-background sm:p-9">
             <div className="absolute inset-0 grid-bg opacity-15" />
             <div className="absolute -right-16 -top-16 h-56 w-56 rounded-full bg-primary/40 blur-3xl" />
             <div className="relative">
@@ -716,22 +716,22 @@ function IntroScreen({
                   VidyaX · {test.stream ?? "Test"} · {test.category ?? "Mock"}
                 </div>
               </div>
-              <h1 className="mt-3 font-display text-3xl font-bold sm:text-5xl">{test.name}</h1>
+              <h1 className="mt-3 font-display text-3xl font-bold leading-[1.05] sm:text-4xl">{test.name}</h1>
               {test.description && (
                 <p className="mt-2 max-w-2xl text-sm text-background/80 sm:text-base">{test.description}</p>
               )}
             </div>
           </div>
 
-          <div className="grid grid-cols-3 border-b-2 border-ink/10">
+          <div className="grid grid-cols-3 border-b border-ink/10">
             <Stat label="Questions" value={String(questionCount || test.total_questions)} />
             <Stat label="Duration" value={`${test.duration_minutes} min`} border />
             <Stat label="Stream" value={test.stream ?? "—"} />
           </div>
 
-          <div className="p-6 sm:p-10">
-            <div className="font-display text-lg font-bold sm:text-xl">Instructions</div>
-            <ul className="mt-3 space-y-2.5 text-sm text-foreground sm:text-base">
+          <div className="p-6 sm:p-9">
+            <div className="font-display text-base font-bold sm:text-lg">Instructions</div>
+            <ul className="mt-3 space-y-2.5 text-sm text-foreground">
               {[
                 { icon: Maximize, text: "The test will open in full-screen for a real exam feel." },
                 { icon: Clock, text: "Timer starts on Start Test. Auto-submits when time ends." },
@@ -750,7 +750,7 @@ function IntroScreen({
             <button
               onClick={onStart}
               disabled={questionCount === 0}
-              className="mt-8 inline-flex w-full items-center justify-center gap-2 rounded-full bg-primary px-6 py-4 text-sm font-bold text-primary-foreground shadow-glow transition-transform hover:scale-[1.02] active:scale-95 disabled:opacity-60 sm:text-base"
+              className="mt-7 inline-flex w-full items-center justify-center gap-2 rounded-full bg-primary px-6 py-4 text-sm font-bold text-primary-foreground shadow-glow transition-transform hover:scale-[1.02] active:scale-95 disabled:opacity-60 sm:text-base"
             >
               <PlayCircle className="h-5 w-5" />
               {questionCount === 0 ? "No questions available" : "Start Test in Full-Screen"}
