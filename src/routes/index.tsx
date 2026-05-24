@@ -101,7 +101,7 @@ function HomePage() {
                     <div className="font-display text-2xl font-bold">
                       Vidya<span className="text-primary-glow">X</span>
                     </div>
-                    <div className="text-xs font-semibold text-background/70">an EduSpark product</div>
+                    <div className="text-xs font-semibold text-background/70">an EduSpark initiative</div>
                   </div>
                 </div>
                 <div className="relative mt-6 grid grid-cols-2 gap-3">
