@@ -584,7 +584,7 @@ function PaletteContent({
                   {answered}/{g.items.length}
                 </span>
               </div>
-              <div className="grid grid-cols-6 gap-1.5 sm:grid-cols-8 lg:grid-cols-6">
+              <div className="grid grid-cols-6 gap-2 p-1 sm:grid-cols-8 lg:grid-cols-6">
                 {g.items.map(({ idx }) => (
                   <button
                     key={idx}
@@ -638,16 +638,18 @@ function subjectChipClass(subject: string): string {
 }
 
 function paletteClass(status: Status, active: boolean) {
-  const ring = active ? "ring-2 ring-offset-2 ring-ink ring-offset-card " : "";
+  // Use inset focus ring (border thickening) instead of ring-offset to
+  // avoid the highlight being clipped by the scrollable parent.
+  const activeBorder = active ? " outline outline-2 outline-offset-1 outline-ink" : "";
   switch (status) {
     case "answered":
-      return ring + "border-success bg-success text-success-foreground";
+      return "border-success bg-success text-success-foreground" + activeBorder;
     case "review":
-      return ring + "border-warning bg-warning text-warning-foreground";
+      return "border-warning bg-warning text-warning-foreground" + activeBorder;
     case "visited":
-      return ring + "border-ink/20 bg-accent text-accent-foreground";
+      return "border-ink/20 bg-accent text-accent-foreground" + activeBorder;
     default:
-      return ring + "border-ink/15 bg-card text-muted-foreground";
+      return "border-ink/15 bg-card text-muted-foreground" + activeBorder;
   }
 }
 
