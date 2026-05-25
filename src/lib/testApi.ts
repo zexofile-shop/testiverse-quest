@@ -1,3 +1,5 @@
+import answerKeyData from "@/data/answerKey.json";
+
 const BASE = "https://gaqyuylvawgoxuaevhsi.supabase.co/rest/v1";
 const APIKEY =
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdhcXl1eWx2YXdnb3h1YWV2aHNpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI0MDExNTQsImV4cCI6MjA2Nzk3NzE1NH0.tRJXi5vTSopCza_61sYu2ccOrk8LR7UvJ07JPP07OEI";
@@ -8,6 +10,9 @@ const headers = {
   "accept-profile": "public",
   accept: "*/*",
 };
+
+/** Local ground-truth answer key (questionId -> correct value). Overrides server `correct`. */
+const ANSWER_KEY = answerKeyData as Record<string, string>;
 
 export interface Test {
   id: string;
@@ -57,7 +62,13 @@ export async function fetchQuestions(testId: string): Promise<Question[]> {
     { headers },
   );
   if (!res.ok) throw new Error("Failed to load questions");
-  return res.json();
+  const data: Question[] = await res.json();
+  // Override `correct` with the locally bundled answer key when available
+  // so results are 100% accurate regardless of what the server returns.
+  return data.map((q) => {
+    const key = ANSWER_KEY[q.id];
+    return key ? { ...q, correct: key } : q;
+  });
 }
 
 /**
