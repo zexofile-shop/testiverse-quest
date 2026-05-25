@@ -10,9 +10,9 @@ import logoVx from "@/assets/logo-vx.jpg";
 export const Route = createFileRoute("/categories")({
   head: () => ({
     meta: [
-      { title: "All Categories — VidyaX by EduSpark" },
+      { title: "All Categories — AdhyayX — Powered by EduSpark" },
       { name: "description", content: "Browse all test categories — JEE, NEET, GATE, Class 10 boards & more." },
-      { property: "og:title", content: "All Categories — VidyaX" },
+      { property: "og:title", content: "All Categories — AdhyayX" },
       { property: "og:description", content: "Pick a stream to see its mock tests." },
     ],
   }),
