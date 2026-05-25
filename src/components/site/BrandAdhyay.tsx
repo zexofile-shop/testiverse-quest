@@ -1,0 +1,31 @@
+import logo from "@/assets/logo-adhyayx.png";
+
+export function BrandAdhyay({
+  size = "md",
+  showSub = true,
+}: {
+  size?: "sm" | "md" | "lg";
+  showSub?: boolean;
+}) {
+  const dims = size === "lg" ? "h-12 w-12" : size === "sm" ? "h-8 w-8" : "h-10 w-10";
+  const title = size === "lg" ? "text-2xl" : size === "sm" ? "text-base" : "text-lg";
+  return (
+    <div className="flex items-center gap-2.5">
+      <span
+        className={`relative inline-flex ${dims} items-center justify-center overflow-hidden rounded-xl bg-white ring-2 ring-ink shadow-soft`}
+      >
+        <img src={logo} alt="AdhyayX — Powered by EduSpark" className="h-full w-full object-contain p-0.5" />
+      </span>
+      <div className="leading-tight">
+        <div className={`font-display ${title} font-bold tracking-tight text-foreground`}>
+          Adhyay<span className="text-primary">X</span>
+        </div>
+        {showSub && (
+          <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+            Powered by <span className="text-foreground">EduSpark</span>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}

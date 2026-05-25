@@ -17,6 +17,7 @@ import {
   CheckCircle2,
   ChevronLeft,
   Clock,
+  Download,
   Flag,
   Grid3x3,
   Home,
@@ -317,7 +318,7 @@ function TestRunner() {
             />
             <div className="min-w-0 leading-tight">
               <div className="truncate text-[10px] font-bold uppercase tracking-[0.18em] text-background/60">
-                VidyaX · {test.stream ?? "Test"}
+                AdhyayX · {test.stream ?? "Test"}
               </div>
               <div className="truncate font-display text-sm font-bold sm:text-base">
                 {test.name}
@@ -619,7 +620,7 @@ const PaletteContent = memo(function PaletteContent({
                   {answered}/{g.items.length}
                 </span>
               </div>
-              <div className="grid grid-cols-6 gap-1.5 sm:grid-cols-8 lg:grid-cols-6">
+              <div className="grid grid-cols-6 gap-2 p-1 sm:grid-cols-8 lg:grid-cols-6">
                 {g.items.map(({ idx }) => (
                   <button
                     key={idx}
@@ -673,16 +674,18 @@ function subjectChipClass(subject: string): string {
 }
 
 function paletteClass(status: Status, active: boolean) {
-  const ring = active ? "ring-2 ring-offset-2 ring-ink ring-offset-card " : "";
+  // Use inset focus ring (border thickening) instead of ring-offset to
+  // avoid the highlight being clipped by the scrollable parent.
+  const activeBorder = active ? " outline outline-2 outline-offset-1 outline-ink" : "";
   switch (status) {
     case "answered":
-      return ring + "border-success bg-success text-success-foreground";
+      return "border-success bg-success text-success-foreground" + activeBorder;
     case "review":
-      return ring + "border-warning bg-warning text-warning-foreground";
+      return "border-warning bg-warning text-warning-foreground" + activeBorder;
     case "visited":
-      return ring + "border-ink/20 bg-accent text-accent-foreground";
+      return "border-ink/20 bg-accent text-accent-foreground" + activeBorder;
     default:
-      return ring + "border-ink/15 bg-card text-muted-foreground";
+      return "border-ink/15 bg-card text-muted-foreground" + activeBorder;
   }
 }
 
@@ -723,9 +726,21 @@ function IntroScreen({
   questionCount: number;
   onStart: () => void;
 }) {
+  // Paint the whole document white so no surface band shows below the card on mobile.
+  useEffect(() => {
+    const prevHtml = document.documentElement.style.backgroundColor;
+    const prevBody = document.body.style.backgroundColor;
+    document.documentElement.style.backgroundColor = "var(--card)";
+    document.body.style.backgroundColor = "var(--card)";
+    return () => {
+      document.documentElement.style.backgroundColor = prevHtml;
+      document.body.style.backgroundColor = prevBody;
+    };
+  }, []);
+
   return (
-    <div className="min-h-screen bg-surface">
-      <div className="mx-auto w-full max-w-5xl px-0 pb-6 pt-3 sm:px-6 sm:pb-10 sm:pt-6">
+    <div className="min-h-screen bg-card" style={{ minHeight: "100dvh" }}>
+      <div className="mx-auto w-full max-w-5xl px-0 pb-0 pt-3 sm:px-6 sm:pb-10 sm:pt-6">
         <div className="px-4 sm:px-0">
           <Link
             to="/category/$stream"
@@ -737,7 +752,7 @@ function IntroScreen({
         </div>
 
         <div
-          className="mt-3 overflow-hidden bg-card shadow-soft sm:mt-4 sm:rounded-2xl sm:border sm:border-ink/10"
+          className="mt-3 overflow-hidden bg-card sm:mt-4 sm:rounded-2xl sm:border sm:border-ink/10 sm:shadow-soft"
           style={{ animation: "fade-up 0.4s both" }}
         >
           <div className="relative bg-foreground p-6 text-background sm:p-9">
@@ -747,7 +762,7 @@ function IntroScreen({
               <div className="flex items-center gap-2">
                 <img src={logoVx} alt="" className="h-9 w-9 rounded-lg ring-2 ring-background/20" />
                 <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-background/60">
-                  VidyaX · {test.stream ?? "Test"} · {test.category ?? "Mock"}
+                  AdhyayX · {test.stream ?? "Test"} · {test.category ?? "Mock"}
                 </div>
               </div>
               <h1 className="mt-3 font-display text-3xl font-bold leading-[1.05] sm:text-4xl">
@@ -896,11 +911,37 @@ function ResultScreen({
   const attempted = correct + wrong;
   const accuracy = attempted > 0 ? Math.round((correct / attempted) * 100) : 0;
 
+  // Keep the entire document white so no surface band shows below the report on mobile.
+  useEffect(() => {
+    const prevHtml = document.documentElement.style.backgroundColor;
+    const prevBody = document.body.style.backgroundColor;
+    document.documentElement.style.backgroundColor = "var(--card)";
+    document.body.style.backgroundColor = "var(--card)";
+    return () => {
+      document.documentElement.style.backgroundColor = prevHtml;
+      document.body.style.backgroundColor = prevBody;
+    };
+  }, []);
+
+  const [downloading, setDownloading] = useState(false);
+  const handleDownload = async () => {
+    try {
+      setDownloading(true);
+      const { generateResultPdf } = await import("@/lib/resultPdf");
+      await generateResultPdf({ test, questions, answers });
+    } catch (e) {
+      console.error(e);
+      window.alert("Sorry, could not generate the PDF. Please try again.");
+    } finally {
+      setDownloading(false);
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-background">
-      <div className="mx-auto w-full max-w-6xl px-0 pb-10 pt-4 sm:px-6 sm:pb-14 sm:pt-10">
+    <div className="min-h-screen bg-card" style={{ minHeight: "100dvh" }}>
+      <div className="mx-auto w-full max-w-6xl px-0 pb-0 pt-0 sm:px-6 sm:pb-14 sm:pt-6">
         <div
-          className="overflow-hidden border-y-2 border-ink/10 bg-card shadow-elevated sm:rounded-3xl sm:border-2"
+          className="overflow-hidden bg-card sm:rounded-3xl sm:border-2 sm:border-ink/10 sm:shadow-elevated"
           style={{ animation: "fade-up 0.4s both" }}
         >
           {/* HEADER */}
@@ -913,7 +954,7 @@ function ResultScreen({
               </span>
               <div className="min-w-0">
                 <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-background/60">
-                  VidyaX · Score Report
+                  AdhyayX · Score Report
                 </div>
                 <h1 className="mt-1 truncate font-display text-2xl font-bold sm:text-3xl">
                   {test.name}
@@ -1181,7 +1222,23 @@ function ResultScreen({
               })}
             </div>
 
-            <div className="mt-8 grid grid-cols-1 gap-3 sm:flex sm:flex-wrap">
+            <div className="mt-8 grid grid-cols-1 gap-3 pb-4 sm:flex sm:flex-wrap">
+              <button
+                onClick={handleDownload}
+                disabled={downloading}
+                className="inline-flex items-center justify-center gap-2 rounded-full bg-foreground px-5 py-3 text-sm font-bold text-background shadow-soft transition-transform hover:scale-[1.03] active:scale-95 disabled:opacity-60"
+              >
+                {downloading ? (
+                  <>
+                    <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-background border-t-transparent" />
+                    Preparing PDF…
+                  </>
+                ) : (
+                  <>
+                    <Download className="h-4 w-4" /> Download Result PDF
+                  </>
+                )}
+              </button>
               <button
                 onClick={onRetake}
                 className="inline-flex items-center justify-center gap-2 rounded-full bg-primary px-5 py-3 text-sm font-bold text-primary-foreground shadow-glow transition-transform hover:scale-[1.03] active:scale-95"
