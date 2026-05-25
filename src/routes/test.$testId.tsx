@@ -17,7 +17,6 @@ import {
   CheckCircle2,
   ChevronLeft,
   Clock,
-  Download,
   Flag,
   Grid3x3,
   Home,
@@ -97,7 +96,7 @@ function TestRunner() {
   const submittedRef = useRef(false);
   const hydratedRef = useRef(false);
 
-  const storageKey = `vidyax:test:${testId}`;
+  const storageKey = `adhyayx:test:${testId}`;
 
   // Initialise per-question state once questions arrive — restoring from
   // localStorage if the user had a session for this test in progress.
@@ -275,10 +274,49 @@ function TestRunner() {
     });
   }, [current, setReviewed]);
 
-  const submit = useCallback(() => {
+  const submit = useCallback(async () => {
+    // Calculate results for submission
+    const rows = questions.map((q, i) => {
+      const opts = parseOptions(q.options);
+      const correctIdx = correctIndex(q.correct, opts);
+      const userIdx = answers[i] ?? null;
+      let delta = 0;
+      let state = "skipped";
+      if (userIdx !== null && userIdx !== undefined) {
+        if (correctIdx >= 0 && userIdx === correctIdx) {
+          delta = q.marks || 0;
+          state = "correct";
+        } else {
+          delta = -(q.negative_marks || 0);
+          state = "wrong";
+        }
+      }
+      return { delta, state };
+    });
+
+    const score = rows.reduce((s, r) => s + r.delta, 0);
+    const totalMarks = questions.reduce((s, q) => s + (q.marks || 0), 0);
+    const correct = rows.filter((r) => r.state === "correct").length;
+    const attempted = rows.filter((r) => r.state !== "skipped").length;
+    const accuracy = attempted > 0 ? (correct / attempted) * 100 : 0;
+
+    try {
+      const { submitTestResult } = await import("@/lib/testResults");
+      await submitTestResult({
+        test_id: testId,
+        score,
+        total_marks: totalMarks,
+        answers: answers,
+        accuracy,
+        time_taken_seconds: test.duration_minutes * 60 - secondsLeft,
+      });
+    } catch (err) {
+      console.error("Failed to sync results:", err);
+    }
+
     exitFullscreen();
     setPhase("result");
-  }, [setPhase]);
+  }, [questions, answers, testId, test, secondsLeft, setPhase]);
 
   const quit = () => {
     if (!window.confirm("Quit this test? Your progress will be lost.")) return;
@@ -620,7 +658,7 @@ const PaletteContent = memo(function PaletteContent({
                   {answered}/{g.items.length}
                 </span>
               </div>
-              <div className="grid grid-cols-6 gap-2 p-1 sm:grid-cols-8 lg:grid-cols-6">
+              <div className="grid grid-cols-6 gap-1.5 sm:grid-cols-8 lg:grid-cols-6">
                 {g.items.map(({ idx }) => (
                   <button
                     key={idx}
@@ -674,18 +712,16 @@ function subjectChipClass(subject: string): string {
 }
 
 function paletteClass(status: Status, active: boolean) {
-  // Use inset focus ring (border thickening) instead of ring-offset to
-  // avoid the highlight being clipped by the scrollable parent.
-  const activeBorder = active ? " outline outline-2 outline-offset-1 outline-ink" : "";
+  const ring = active ? "ring-2 ring-offset-2 ring-ink ring-offset-card " : "";
   switch (status) {
     case "answered":
-      return "border-success bg-success text-success-foreground" + activeBorder;
+      return ring + "border-success bg-success text-success-foreground";
     case "review":
-      return "border-warning bg-warning text-warning-foreground" + activeBorder;
+      return ring + "border-warning bg-warning text-warning-foreground";
     case "visited":
-      return "border-ink/20 bg-accent text-accent-foreground" + activeBorder;
+      return ring + "border-ink/20 bg-accent text-accent-foreground";
     default:
-      return "border-ink/15 bg-card text-muted-foreground" + activeBorder;
+      return ring + "border-ink/15 bg-card text-muted-foreground";
   }
 }
 
@@ -726,21 +762,9 @@ function IntroScreen({
   questionCount: number;
   onStart: () => void;
 }) {
-  // Paint the whole document white so no surface band shows below the card on mobile.
-  useEffect(() => {
-    const prevHtml = document.documentElement.style.backgroundColor;
-    const prevBody = document.body.style.backgroundColor;
-    document.documentElement.style.backgroundColor = "var(--card)";
-    document.body.style.backgroundColor = "var(--card)";
-    return () => {
-      document.documentElement.style.backgroundColor = prevHtml;
-      document.body.style.backgroundColor = prevBody;
-    };
-  }, []);
-
   return (
-    <div className="min-h-screen bg-card" style={{ minHeight: "100dvh" }}>
-      <div className="mx-auto w-full max-w-5xl px-0 pb-0 pt-3 sm:px-6 sm:pb-10 sm:pt-6">
+    <div className="min-h-screen bg-surface">
+      <div className="mx-auto w-full max-w-5xl px-0 pb-6 pt-3 sm:px-6 sm:pb-10 sm:pt-6">
         <div className="px-4 sm:px-0">
           <Link
             to="/category/$stream"
@@ -752,7 +776,7 @@ function IntroScreen({
         </div>
 
         <div
-          className="mt-3 overflow-hidden bg-card sm:mt-4 sm:rounded-2xl sm:border sm:border-ink/10 sm:shadow-soft"
+          className="mt-3 overflow-hidden bg-card shadow-soft sm:mt-4 sm:rounded-2xl sm:border sm:border-ink/10"
           style={{ animation: "fade-up 0.4s both" }}
         >
           <div className="relative bg-foreground p-6 text-background sm:p-9">
@@ -911,37 +935,11 @@ function ResultScreen({
   const attempted = correct + wrong;
   const accuracy = attempted > 0 ? Math.round((correct / attempted) * 100) : 0;
 
-  // Keep the entire document white so no surface band shows below the report on mobile.
-  useEffect(() => {
-    const prevHtml = document.documentElement.style.backgroundColor;
-    const prevBody = document.body.style.backgroundColor;
-    document.documentElement.style.backgroundColor = "var(--card)";
-    document.body.style.backgroundColor = "var(--card)";
-    return () => {
-      document.documentElement.style.backgroundColor = prevHtml;
-      document.body.style.backgroundColor = prevBody;
-    };
-  }, []);
-
-  const [downloading, setDownloading] = useState(false);
-  const handleDownload = async () => {
-    try {
-      setDownloading(true);
-      const { generateResultPdf } = await import("@/lib/resultPdf");
-      await generateResultPdf({ test, questions, answers });
-    } catch (e) {
-      console.error(e);
-      window.alert("Sorry, could not generate the PDF. Please try again.");
-    } finally {
-      setDownloading(false);
-    }
-  };
-
   return (
-    <div className="min-h-screen bg-card" style={{ minHeight: "100dvh" }}>
-      <div className="mx-auto w-full max-w-6xl px-0 pb-0 pt-0 sm:px-6 sm:pb-14 sm:pt-6">
+    <div className="min-h-screen bg-background">
+      <div className="mx-auto w-full max-w-6xl px-0 pb-10 pt-4 sm:px-6 sm:pb-14 sm:pt-10">
         <div
-          className="overflow-hidden bg-card sm:rounded-3xl sm:border-2 sm:border-ink/10 sm:shadow-elevated"
+          className="overflow-hidden border-y-2 border-ink/10 bg-card shadow-elevated sm:rounded-3xl sm:border-2"
           style={{ animation: "fade-up 0.4s both" }}
         >
           {/* HEADER */}
@@ -1222,23 +1220,7 @@ function ResultScreen({
               })}
             </div>
 
-            <div className="mt-8 grid grid-cols-1 gap-3 pb-4 sm:flex sm:flex-wrap">
-              <button
-                onClick={handleDownload}
-                disabled={downloading}
-                className="inline-flex items-center justify-center gap-2 rounded-full bg-foreground px-5 py-3 text-sm font-bold text-background shadow-soft transition-transform hover:scale-[1.03] active:scale-95 disabled:opacity-60"
-              >
-                {downloading ? (
-                  <>
-                    <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-background border-t-transparent" />
-                    Preparing PDF…
-                  </>
-                ) : (
-                  <>
-                    <Download className="h-4 w-4" /> Download Result PDF
-                  </>
-                )}
-              </button>
+            <div className="mt-8 grid grid-cols-1 gap-3 sm:flex sm:flex-wrap">
               <button
                 onClick={onRetake}
                 className="inline-flex items-center justify-center gap-2 rounded-full bg-primary px-5 py-3 text-sm font-bold text-primary-foreground shadow-glow transition-transform hover:scale-[1.03] active:scale-95"
