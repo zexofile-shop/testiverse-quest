@@ -64,7 +64,7 @@ function CategoriesPage() {
               >
                 <div className="flex items-start justify-between gap-2">
                   <span className="inline-flex h-10 w-10 items-center justify-center overflow-hidden rounded-xl ring-2 ring-ink shadow-soft sm:h-12 sm:w-12">
-                    <img src={logoVx} alt="VidyaX" className="h-full w-full object-cover" />
+                    <img src={logoVx} alt="AdhyayX" className="h-full w-full object-cover" />
                   </span>
                   <span className="inline-flex items-center gap-1 rounded-full bg-foreground px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-background tabular-nums">
                     {c.count}

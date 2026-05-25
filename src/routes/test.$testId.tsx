@@ -293,7 +293,7 @@ function TestRunner() {
             <img src={logoVx} alt="" className="hidden h-9 w-9 shrink-0 rounded-lg ring-2 ring-background/20 sm:block" />
             <div className="min-w-0 leading-tight">
               <div className="truncate text-[10px] font-bold uppercase tracking-[0.18em] text-background/60">
-                VidyaX · {test.stream ?? "Test"}
+                AdhyayX · {test.stream ?? "Test"}
               </div>
               <div className="truncate font-display text-sm font-bold sm:text-base">
                 {test.name}
@@ -728,7 +728,7 @@ function IntroScreen({
               <div className="flex items-center gap-2">
                 <img src={logoVx} alt="" className="h-9 w-9 rounded-lg ring-2 ring-background/20" />
                 <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-background/60">
-                  VidyaX · {test.stream ?? "Test"} · {test.category ?? "Mock"}
+                  AdhyayX · {test.stream ?? "Test"} · {test.category ?? "Mock"}
                 </div>
               </div>
               <h1 className="mt-3 font-display text-3xl font-bold leading-[1.05] sm:text-4xl">{test.name}</h1>
@@ -910,7 +910,7 @@ function ResultScreen({
               </span>
               <div className="min-w-0">
                 <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-background/60">
-                  VidyaX · Score Report
+                  AdhyayX · Score Report
                 </div>
                 <h1 className="mt-1 truncate font-display text-2xl font-bold sm:text-3xl">{test.name}</h1>
                 <div className="mt-1 text-[11px] font-semibold text-background/70">
