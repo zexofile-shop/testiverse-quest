@@ -690,8 +690,8 @@ function IntroScreen({
   onStart: () => void;
 }) {
   return (
-    <div className="min-h-screen bg-surface">
-      <div className="mx-auto w-full max-w-5xl px-0 pb-6 pt-3 sm:px-6 sm:pb-10 sm:pt-6">
+    <div className="min-h-screen bg-card">
+      <div className="mx-auto w-full max-w-5xl px-0 pb-0 pt-3 sm:px-6 sm:pb-10 sm:pt-6">
         <div className="px-4 sm:px-0">
           <Link
             to="/category/$stream"
@@ -853,10 +853,10 @@ function ResultScreen({
   const accuracy = attempted > 0 ? Math.round((correct / attempted) * 100) : 0;
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="mx-auto w-full max-w-6xl px-0 pb-10 pt-4 sm:px-6 sm:pb-14 sm:pt-10">
+    <div className="min-h-screen bg-card">
+      <div className="mx-auto w-full max-w-6xl px-0 pb-10 pt-0 sm:px-6 sm:pb-14 sm:pt-6">
         <div
-          className="overflow-hidden border-y-2 border-ink/10 bg-card shadow-elevated sm:rounded-3xl sm:border-2"
+          className="overflow-hidden border-b-2 border-ink/10 bg-card shadow-elevated sm:rounded-3xl sm:border-2"
           style={{ animation: "fade-up 0.4s both" }}
         >
           {/* HEADER */}
