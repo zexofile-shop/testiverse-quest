@@ -17,6 +17,7 @@ import {
   CheckCircle2,
   ChevronLeft,
   Clock,
+  Download,
   Flag,
   Grid3x3,
   Home,
@@ -1145,7 +1146,23 @@ function ResultScreen({
               })}
             </div>
 
-            <div className="mt-8 grid grid-cols-1 gap-3 sm:flex sm:flex-wrap">
+            <div className="mt-8 grid grid-cols-1 gap-3 pb-4 sm:flex sm:flex-wrap">
+              <button
+                onClick={handleDownload}
+                disabled={downloading}
+                className="inline-flex items-center justify-center gap-2 rounded-full bg-foreground px-5 py-3 text-sm font-bold text-background shadow-soft transition-transform hover:scale-[1.03] active:scale-95 disabled:opacity-60"
+              >
+                {downloading ? (
+                  <>
+                    <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-background border-t-transparent" />
+                    Preparing PDF…
+                  </>
+                ) : (
+                  <>
+                    <Download className="h-4 w-4" /> Download Result PDF
+                  </>
+                )}
+              </button>
               <button
                 onClick={onRetake}
                 className="inline-flex items-center justify-center gap-2 rounded-full bg-primary px-5 py-3 text-sm font-bold text-primary-foreground shadow-glow transition-transform hover:scale-[1.03] active:scale-95"
