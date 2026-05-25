@@ -77,6 +77,10 @@ function TestRunner() {
   const [reviewed, setReviewed] = useState<boolean[]>([]);
   const [visited, setVisited] = useState<boolean[]>([]);
   const [secondsLeft, setSecondsLeft] = useState(0);
+  const secondsLeftRef = useRef(secondsLeft);
+  useEffect(() => {
+    secondsLeftRef.current = secondsLeft;
+  }, [secondsLeft]);
 
   const statuses: Status[] = useMemo(() => {
     return answers.map((a, i) => {
@@ -137,18 +141,40 @@ function TestRunner() {
     hydratedRef.current = true;
   }, [phase, questions.length, answers.length, storageKey]);
 
-  // Persist on any change while active
+  // Persist state on change while active. We use secondsLeftRef to avoid
+  // triggering this effect every second, only when other state changes.
   useEffect(() => {
     if (phase !== "active" || !hydratedRef.current) return;
     try {
       localStorage.setItem(
         storageKey,
-        JSON.stringify({ answers, reviewed, visited, current, secondsLeft }),
+        JSON.stringify({
+          answers,
+          reviewed,
+          visited,
+          current,
+          secondsLeft: secondsLeftRef.current,
+        }),
       );
     } catch {
       /* ignore quota */
     }
-  }, [phase, answers, reviewed, visited, current, secondsLeft, storageKey]);
+  }, [phase, answers, reviewed, visited, current, storageKey]);
+
+  // Throttled timer persistence (every 10s) to reduce I/O
+  useEffect(() => {
+    if (phase !== "active" || !hydratedRef.current || secondsLeft % 10 !== 0) return;
+    try {
+      const raw = localStorage.getItem(storageKey);
+      if (raw) {
+        const saved = JSON.parse(raw);
+        saved.secondsLeft = secondsLeft;
+        localStorage.setItem(storageKey, JSON.stringify(saved));
+      }
+    } catch {
+      /* ignore */
+    }
+  }, [phase, secondsLeft, storageKey]);
 
   // Countdown
   useEffect(() => {
@@ -169,6 +195,119 @@ function TestRunner() {
   useEffect(() => {
     if (phase !== "active") exitFullscreen();
   }, [phase]);
+
+  // ===== ACTIVE HOOKS (must be before early returns) =====
+  const q = questions[current] || { options: null, subject: null, marks: 0, negative_marks: 0 };
+  const opts = useMemo(() => parseOptions(q.options), [q.options]);
+  const optionStyle = useMemo(() => detectOptionStyle(opts), [opts]);
+  // When options are pure letters/numbers (image-based questions), the
+  // option text *is* just "A"/"B"/... — render only the label, no duplicate.
+  const labelOnly = useMemo(() => optionStyle !== "text", [optionStyle]);
+
+  const optionLabel = useCallback(
+    (i: number) =>
+      optionStyle === "letter"
+        ? opts[i].toUpperCase()
+        : optionStyle === "number"
+          ? opts[i]
+          : String.fromCharCode(65 + i),
+    [optionStyle, opts],
+  );
+
+  const setAnswer = useCallback(
+    (i: number) => {
+      setAnswers((prev) => {
+        const next = [...prev];
+        next[current] = next[current] === i ? null : i; // tap again to clear
+        return next;
+      });
+    },
+    [current],
+  );
+
+  const go = useCallback(
+    (idx: number) => {
+      setCurrent(idx);
+      setVisited((prev) => {
+        if (prev[idx]) return prev;
+        const next = [...prev];
+        next[idx] = true;
+        return next;
+      });
+      setPaletteOpen(false);
+    },
+    [setCurrent, setVisited, setPaletteOpen],
+  );
+
+  const toggleReview = useCallback(() => {
+    setReviewed((prev) => {
+      const next = [...prev];
+      next[current] = !next[current];
+      return next;
+    });
+  }, [current, setReviewed]);
+
+  const submit = useCallback(async () => {
+    // Calculate results for submission
+    const rows = questions.map((q, i) => {
+      const opts = parseOptions(q.options);
+      const correctIdx = correctIndex(q.correct, opts);
+      const userIdx = answers[i] ?? null;
+      let delta = 0;
+      let state = "skipped";
+      if (userIdx !== null && userIdx !== undefined) {
+        if (correctIdx >= 0 && userIdx === correctIdx) {
+          delta = q.marks || 0;
+          state = "correct";
+        } else {
+          delta = -(q.negative_marks || 0);
+          state = "wrong";
+        }
+      }
+      return { delta, state };
+    });
+
+    const score = rows.reduce((s, r) => s + r.delta, 0);
+    const totalMarks = questions.reduce((s, q) => s + (q.marks || 0), 0);
+    const correct = rows.filter((r) => r.state === "correct").length;
+    const attempted = rows.filter((r) => r.state !== "skipped").length;
+    const accuracy = attempted > 0 ? (correct / attempted) * 100 : 0;
+
+    try {
+      const { submitTestResult } = await import("@/lib/testResults");
+      await submitTestResult({
+        test_id: testId,
+        score,
+        total_marks: totalMarks,
+        answers: answers,
+        accuracy,
+        time_taken_seconds: test.duration_minutes * 60 - secondsLeftRef.current,
+      });
+    } catch (err) {
+      console.error("Failed to sync results:", err);
+    }
+
+    exitFullscreen();
+    setPhase("result");
+  }, [questions, answers, testId, test, setPhase]);
+
+  const quit = () => {
+    if (!window.confirm("Quit this test? Your progress will be lost.")) return;
+    try {
+      localStorage.removeItem(storageKey);
+    } catch {
+      /* ignore */
+    }
+    exitFullscreen();
+    hydratedRef.current = false;
+    submittedRef.current = false;
+    setAnswers([]);
+    setReviewed([]);
+    setVisited([]);
+    setCurrent(0);
+    setPhase("intro");
+    navigate({ to: "/categories" });
+  };
 
   if (testsQuery.isLoading || questionsQuery.isLoading) return <FullPageLoader />;
 
@@ -229,112 +368,6 @@ function TestRunner() {
       />
     );
   }
-
-  // ===== ACTIVE =====
-  const q = questions[current];
-  const opts = parseOptions(q.options);
-  const optionStyle = detectOptionStyle(opts);
-  // When options are pure letters/numbers (image-based questions), the
-  // option text *is* just "A"/"B"/... — render only the label, no duplicate.
-  const labelOnly = optionStyle !== "text";
-  const optionLabel = (i: number) =>
-    optionStyle === "letter"
-      ? opts[i].toUpperCase()
-      : optionStyle === "number"
-        ? opts[i]
-        : String.fromCharCode(65 + i);
-
-  const setAnswer = (i: number) => {
-    setAnswers((prev) => {
-      const next = [...prev];
-      next[current] = next[current] === i ? null : i; // tap again to clear
-      return next;
-    });
-  };
-
-  const go = useCallback(
-    (idx: number) => {
-      setCurrent(idx);
-      setVisited((prev) => {
-        if (prev[idx]) return prev;
-        const next = [...prev];
-        next[idx] = true;
-        return next;
-      });
-      setPaletteOpen(false);
-    },
-    [setCurrent, setVisited, setPaletteOpen],
-  );
-
-  const toggleReview = useCallback(() => {
-    setReviewed((prev) => {
-      const next = [...prev];
-      next[current] = !next[current];
-      return next;
-    });
-  }, [current, setReviewed]);
-
-  const submit = useCallback(async () => {
-    // Calculate results for submission
-    const rows = questions.map((q, i) => {
-      const opts = parseOptions(q.options);
-      const correctIdx = correctIndex(q.correct, opts);
-      const userIdx = answers[i] ?? null;
-      let delta = 0;
-      let state = "skipped";
-      if (userIdx !== null && userIdx !== undefined) {
-        if (correctIdx >= 0 && userIdx === correctIdx) {
-          delta = q.marks || 0;
-          state = "correct";
-        } else {
-          delta = -(q.negative_marks || 0);
-          state = "wrong";
-        }
-      }
-      return { delta, state };
-    });
-
-    const score = rows.reduce((s, r) => s + r.delta, 0);
-    const totalMarks = questions.reduce((s, q) => s + (q.marks || 0), 0);
-    const correct = rows.filter((r) => r.state === "correct").length;
-    const attempted = rows.filter((r) => r.state !== "skipped").length;
-    const accuracy = attempted > 0 ? (correct / attempted) * 100 : 0;
-
-    try {
-      const { submitTestResult } = await import("@/lib/testResults");
-      await submitTestResult({
-        test_id: testId,
-        score,
-        total_marks: totalMarks,
-        answers: answers,
-        accuracy,
-        time_taken_seconds: test.duration_minutes * 60 - secondsLeft,
-      });
-    } catch (err) {
-      console.error("Failed to sync results:", err);
-    }
-
-    exitFullscreen();
-    setPhase("result");
-  }, [questions, answers, testId, test, secondsLeft, setPhase]);
-
-  const quit = () => {
-    if (!window.confirm("Quit this test? Your progress will be lost.")) return;
-    try {
-      localStorage.removeItem(storageKey);
-    } catch {
-      /* ignore */
-    }
-    exitFullscreen();
-    hydratedRef.current = false;
-    submittedRef.current = false;
-    setAnswers([]);
-    setReviewed([]);
-    setVisited([]);
-    setCurrent(0);
-    setPhase("intro");
-    navigate({ to: "/categories" });
-  };
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
@@ -879,10 +912,10 @@ function ResultScreen({
     delta: number;
   };
 
-  const rows: Row[] = questions.map((q) => {
+  const rows: Row[] = questions.map((q, i) => {
     const opts = parseOptions(q.options);
     const correctIdx = correctIndex(q.correct, opts);
-    const userIdx = answers[questions.indexOf(q)] ?? null;
+    const userIdx = answers[i] ?? null;
     let state: Row["state"] = "skipped";
     let delta = 0;
     if (userIdx === null || userIdx === undefined) {
