@@ -66,15 +66,19 @@ async function normalizeCatastrophicSsrResponse(response: Response): Promise<Res
   return brandedErrorResponse();
 }
 
-async function handleAdhyayxProxy(request: Request): Promise<Response | null> {
+async function handleAdhyayxProxy(request: Request, env: unknown): Promise<Response | null> {
   const url = new URL(request.url);
   if (!url.pathname.startsWith("/api/v1/adhyayx/")) {
     return null;
   }
 
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const envObj = (env || {}) as Record<string, string | undefined>;
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || envObj.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseKey =
-    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
+    envObj.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
+    envObj.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
   if (!supabaseUrl || !supabaseKey) {
     return new Response(JSON.stringify({ error: "Supabase credentials missing" }), {
@@ -84,9 +88,16 @@ async function handleAdhyayxProxy(request: Request): Promise<Response | null> {
   }
 
   const relativePath = url.pathname.replace("/api/v1/adhyayx/", "");
-  const targetUrl = `${supabaseUrl}/rest/v1/${relativePath}${url.search}`;
+  const cleanSupabaseUrl = supabaseUrl.endsWith("/") ? supabaseUrl.slice(0, -1) : supabaseUrl;
+  const targetUrl = `${cleanSupabaseUrl}/rest/v1/${relativePath}${url.search}`;
 
-  const headers = new Headers(request.headers);
+  const headers = new Headers();
+  const allowedHeaders = ["content-type", "accept", "prefer", "range", "if-match"];
+  for (const h of allowedHeaders) {
+    const val = request.headers.get(h);
+    if (val) headers.set(h, val);
+  }
+
   headers.set("apikey", supabaseKey);
   headers.set("Authorization", `Bearer ${supabaseKey}`);
 
@@ -101,11 +112,24 @@ async function handleAdhyayxProxy(request: Request): Promise<Response | null> {
     });
 
     const data = await response.text();
+    const responseHeaders = new Headers();
+    const forwardResponseHeaders = [
+      "content-type",
+      "content-range",
+      "preference-applied",
+      "location",
+    ];
+    for (const h of forwardResponseHeaders) {
+      const val = response.headers.get(h);
+      if (val) responseHeaders.set(h, val);
+    }
+    if (!responseHeaders.has("content-type")) {
+      responseHeaders.set("content-type", "application/json");
+    }
+
     return new Response(data, {
       status: response.status,
-      headers: {
-        "Content-Type": response.headers.get("Content-Type") || "application/json",
-      },
+      headers: responseHeaders,
     });
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : String(error);
@@ -118,7 +142,7 @@ async function handleAdhyayxProxy(request: Request): Promise<Response | null> {
 
 export default {
   async fetch(request: Request, env: unknown, ctx: unknown) {
-    const proxyResponse = await handleAdhyayxProxy(request);
+    const proxyResponse = await handleAdhyayxProxy(request, env);
     if (proxyResponse) return proxyResponse;
 
     try {

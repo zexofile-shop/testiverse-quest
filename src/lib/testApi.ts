@@ -1,5 +1,3 @@
-import { proxySupabase } from "@/utils/supabase/proxy";
-
 export interface Test {
   id: string;
   name: string;
