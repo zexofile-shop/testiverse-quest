@@ -8,7 +8,7 @@ export function Footer() {
           <div>
             <div className="flex items-center gap-3">
               <div className="font-display text-xl font-bold">
-                Adhyay<span className="text-primary-glow">X</span>
+                Vidya<span className="text-primary-glow">X</span>
               </div>
               <span className="rounded-full border border-background/20 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-widest text-background/70">
                 by EduSpark
@@ -35,7 +35,7 @@ export function Footer() {
           </div>
         </div>
         <div className="mt-10 border-t border-background/15 pt-6 text-xs text-background/60">
-          © {new Date().getFullYear()} AdhyayX · An EduSpark learning platform. Crafted for serious
+          © {new Date().getFullYear()} VidyaX · An EduSpark learning platform. Crafted for serious
           aspirants.
         </div>
       </div>

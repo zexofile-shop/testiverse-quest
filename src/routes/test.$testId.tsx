@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   correctIndex,
   detectOptionStyle,
@@ -11,7 +11,6 @@ import {
   type Question,
   type Test,
 } from "@/lib/testApi";
-import { submitTestResult } from "@/lib/testResults";
 import {
   ArrowLeft,
   ArrowRight,
@@ -40,26 +39,16 @@ type Status = "answered" | "review" | "visited" | "unseen";
 
 function enterFullscreen() {
   try {
-    const el = document.documentElement as HTMLElement & {
-      requestFullscreen?: () => Promise<void>;
-      webkitRequestFullscreen?: () => Promise<void>;
-    };
+    const el: any = document.documentElement;
     (el.requestFullscreen || el.webkitRequestFullscreen)?.call(el);
-  } catch (err) {
-    console.error("Fullscreen request failed", err);
-  }
+  } catch {}
 }
 function exitFullscreen() {
   try {
     if (document.fullscreenElement) {
-      const doc = document as Document & {
-        webkitExitFullscreen?: () => Promise<void>;
-      };
-      (doc.exitFullscreen || doc.webkitExitFullscreen)?.call(doc);
+      (document.exitFullscreen || (document as any).webkitExitFullscreen)?.call(document);
     }
-  } catch (err) {
-    console.error("Exit fullscreen failed", err);
-  }
+  } catch {}
 }
 
 function TestRunner() {
@@ -92,7 +81,7 @@ function TestRunner() {
   const submittedRef = useRef(false);
   const hydratedRef = useRef(false);
 
-  const storageKey = `adhyayx:test:${testId}`;
+  const storageKey = `vidyax:test:${testId}`;
 
   // Initialise per-question state once questions arrive — restoring from
   // localStorage if the user had a session for this test in progress.
@@ -150,63 +139,76 @@ function TestRunner() {
   useEffect(() => {
     if (phase !== "active") return;
     if (secondsLeft <= 0) {
-      handleFinish();
+      if (!submittedRef.current) {
+        submittedRef.current = true;
+        exitFullscreen();
+        setPhase("result");
+      }
       return;
     }
     const t = setTimeout(() => setSecondsLeft((s) => s - 1), 1000);
     return () => clearTimeout(t);
-  }, [phase, secondsLeft, handleFinish]);
+  }, [phase, secondsLeft]);
 
   // Exit fullscreen when leaving active
   useEffect(() => {
     if (phase !== "active") exitFullscreen();
   }, [phase]);
 
-  const handleFinish = useCallback(async () => {
-    if (submittedRef.current) return;
-    submittedRef.current = true;
-
-    // Calculate score for submission
-    const totalMarks = questions.reduce((s, q) => s + (q.marks || 0), 0);
-    const results = questions.map((q, i) => {
-      const opts = parseOptions(q.options);
-      const correctIdx = correctIndex(q.correct, opts);
-      const userIdx = answers[i] ?? null;
-      let delta = 0;
-      let isCorrect = false;
-      if (userIdx !== null && userIdx !== undefined) {
-        if (correctIdx >= 0 && userIdx === correctIdx) {
-          delta = q.marks || 0;
-          isCorrect = true;
-        } else {
-          delta = -(q.negative_marks || 0);
-        }
-      }
-      return { delta, correct: isCorrect, answered: userIdx !== null };
-    });
-
-    const score = results.reduce((s, r) => s + r.delta, 0);
-    const correctCount = results.filter((r) => r.correct).length;
-    const answeredCount = results.filter((r) => r.answered).length;
-    const accuracy = answeredCount > 0 ? Math.round((correctCount / answeredCount) * 100) : 0;
-    const timeTaken = (test?.duration_minutes ?? 0) * 60 - secondsLeft;
-
-    try {
-      await submitTestResult({
-        test_id: testId,
-        score,
-        total_marks: totalMarks,
-        answers: answers.map((a, i) => ({ question_id: questions[i].id, selected_option: a })),
-        accuracy,
-        time_taken_seconds: timeTaken,
+  // Memoize event handlers to keep stable references
+  const setAnswer = useCallback(
+    (i: number) => {
+      setAnswers((prev) => {
+        const next = [...prev];
+        next[current] = next[current] === i ? null : i; // tap again to clear
+        return next;
       });
-    } catch (err) {
-      console.error("Failed to submit results:", err);
-    }
+    },
+    [current],
+  );
 
+  const go = useCallback((idx: number) => {
+    setCurrent(idx);
+    setVisited((prev) => {
+      if (prev[idx]) return prev;
+      const next = [...prev];
+      next[idx] = true;
+      return next;
+    });
+    setPaletteOpen(false);
+  }, []);
+
+  const toggleReview = useCallback(() => {
+    setReviewed((prev) => {
+      const next = [...prev];
+      next[current] = !next[current];
+      return next;
+    });
+  }, [current]);
+
+  const submit = useCallback(() => {
     exitFullscreen();
     setPhase("result");
-  }, [test?.duration_minutes, secondsLeft, testId, questions, answers]);
+  }, []);
+
+  const closePalette = useCallback(() => setPaletteOpen(false), []);
+
+  // Memoize heavy calculations that don't need to run on every timer tick
+  const statuses: Status[] = useMemo(
+    () =>
+      answers.map((a, i) => {
+        if (reviewed[i]) return "review";
+        if (a !== null && a !== undefined) return "answered";
+        if (visited[i]) return "visited";
+        return "unseen";
+      }),
+    [answers, reviewed, visited],
+  );
+
+  const answeredCount = useMemo(
+    () => answers.filter((a) => a !== null && a !== undefined).length,
+    [answers],
+  );
 
   if (testsQuery.isLoading || questionsQuery.isLoading) return <FullPageLoader />;
 
@@ -221,6 +223,54 @@ function TestRunner() {
     );
   }
 
+  if (phase === "intro") {
+    return (
+      <IntroScreen
+        test={test}
+        questionCount={questions.length}
+        onStart={() => {
+          setSecondsLeft(test.duration_minutes * 60);
+          setPhase("active");
+          // small delay so React commits before requesting fullscreen
+          setTimeout(enterFullscreen, 50);
+        }}
+      />
+    );
+  }
+
+  if (phase === "result") {
+    return (
+      <ResultScreen
+        test={test}
+        questions={questions}
+        answers={answers}
+        onRetake={() => {
+          try {
+            localStorage.removeItem(storageKey);
+          } catch {
+            /* ignore */
+          }
+          hydratedRef.current = false;
+          setAnswers([]);
+          setReviewed([]);
+          setVisited([]);
+          setCurrent(0);
+          submittedRef.current = false;
+          setPhase("intro");
+        }}
+        onHome={() => {
+          try {
+            localStorage.removeItem(storageKey);
+          } catch {
+            /* ignore */
+          }
+          navigate({ to: "/categories" });
+        }}
+      />
+    );
+  }
+
+  // ===== ACTIVE =====
   const q = questions[current];
   const opts = parseOptions(q.options);
   const optionStyle = detectOptionStyle(opts);
@@ -233,38 +283,6 @@ function TestRunner() {
       : optionStyle === "number"
         ? opts[i]
         : String.fromCharCode(65 + i);
-
-  const setAnswer = (i: number) => {
-    setAnswers((prev) => {
-      const next = [...prev];
-      next[current] = next[current] === i ? null : i; // tap again to clear
-      return next;
-    });
-  };
-
-  const go = (idx: number) => {
-    setCurrent(idx);
-    setVisited((prev) => {
-      if (prev[idx]) return prev;
-      const next = [...prev];
-      next[idx] = true;
-      return next;
-    });
-    setPaletteOpen(false);
-  };
-
-  const toggleReview = () => {
-    setReviewed((prev) => {
-      const next = [...prev];
-      next[current] = !next[current];
-      return next;
-    });
-  };
-
-  const submit = () => {
-    if (!window.confirm("Are you sure you want to submit the test?")) return;
-    handleFinish();
-  };
 
   const quit = () => {
     if (!window.confirm("Quit this test? Your progress will be lost.")) return;
@@ -283,15 +301,6 @@ function TestRunner() {
     setPhase("intro");
     navigate({ to: "/categories" });
   };
-
-  const statuses: Status[] = answers.map((a, i) => {
-    if (reviewed[i]) return "review";
-    if (a !== null && a !== undefined) return "answered";
-    if (visited[i]) return "visited";
-    return "unseen";
-  });
-
-  const answeredCount = answers.filter((a) => a !== null && a !== undefined).length;
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
@@ -313,7 +322,7 @@ function TestRunner() {
             />
             <div className="min-w-0 leading-tight">
               <div className="truncate text-[10px] font-bold uppercase tracking-[0.18em] text-background/60">
-                AdhyayX · {test.stream ?? "Test"}
+                VidyaX · {test.stream ?? "Test"}
               </div>
               <div className="truncate font-display text-sm font-bold sm:text-base">
                 {test.name}
@@ -514,7 +523,7 @@ function TestRunner() {
       >
         {/* Backdrop */}
         <div
-          onClick={() => setPaletteOpen(false)}
+          onClick={closePalette}
           className={`absolute inset-0 bg-foreground/50 backdrop-blur-sm transition-opacity duration-300 ${
             paletteOpen ? "opacity-100" : "opacity-0"
           }`}
@@ -536,7 +545,7 @@ function TestRunner() {
               <div className="font-display text-base font-bold">Question Palette</div>
             </div>
             <button
-              onClick={() => setPaletteOpen(false)}
+              onClick={closePalette}
               className="inline-flex h-9 w-9 items-center justify-center rounded-full border-2 border-ink/15 text-foreground transition-colors hover:bg-foreground hover:text-background hover:border-foreground"
               aria-label="Close palette"
             >
@@ -559,7 +568,7 @@ function TestRunner() {
   );
 }
 
-function PaletteContent({
+const PaletteContent = memo(function PaletteContent({
   questions,
   current,
   statuses,
@@ -646,7 +655,7 @@ function PaletteContent({
       </button>
     </>
   );
-}
+});
 
 /**
  * Colour-codes a subject chip. Matches Physics/Chemistry/Biology/Maths
@@ -740,7 +749,7 @@ function IntroScreen({
               <div className="flex items-center gap-2">
                 <img src={logoVx} alt="" className="h-9 w-9 rounded-lg ring-2 ring-background/20" />
                 <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-background/60">
-                  AdhyayX · {test.stream ?? "Test"} · {test.category ?? "Mock"}
+                  VidyaX · {test.stream ?? "Test"} · {test.category ?? "Mock"}
                 </div>
               </div>
               <h1 className="mt-3 font-display text-3xl font-bold leading-[1.05] sm:text-4xl">
@@ -906,7 +915,7 @@ function ResultScreen({
               </span>
               <div className="min-w-0">
                 <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-background/60">
-                  AdhyayX · Score Report
+                  VidyaX · Score Report
                 </div>
                 <h1 className="mt-1 truncate font-display text-2xl font-bold sm:text-3xl">
                   {test.name}
@@ -1260,7 +1269,7 @@ function CenterMessage({
         <h1 className="font-display text-2xl font-bold">{title}</h1>
         <p className="mt-2 text-sm text-muted-foreground">{body}</p>
         <Link
-          to={actionTo as "/"}
+          to={actionTo as any}
           className="mt-6 inline-flex items-center gap-2 rounded-full bg-primary px-5 py-3 text-sm font-bold text-primary-foreground shadow-glow"
         >
           {actionLabel}

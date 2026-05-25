@@ -72,10 +72,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "AdhyayX — by EduSpark" },
+      { title: "VidyaX — by EduSpark" },
       { name: "description", content: "Smart test series for JEE, NEET, GATE & school exams." },
       { name: "author", content: "EduSpark" },
-      { property: "og:title", content: "AdhyayX — by EduSpark" },
+      { property: "og:title", content: "VidyaX — by EduSpark" },
       { property: "og:description", content: "Smart test series by EduSpark." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

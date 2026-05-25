@@ -14,8 +14,8 @@ export const Route = createFileRoute("/category/$stream")({
     const stream = decodeURIComponent(params.stream);
     return {
       meta: [
-        { title: `${stream} Tests — AdhyayX by EduSpark` },
-        { name: "description", content: `All ${stream} mock tests on AdhyayX.` },
+        { title: `${stream} Tests — VidyaX by EduSpark` },
+        { name: "description", content: `All ${stream} mock tests on VidyaX.` },
       ],
     };
   },
@@ -50,7 +50,7 @@ function CategoryPage() {
           </Link>
           <div className="mt-5 flex flex-wrap items-center gap-4">
             <span className="inline-flex h-14 w-14 items-center justify-center overflow-hidden rounded-2xl ring-2 ring-background/30 shadow-soft">
-              <img src={logoVx} alt="AdhyayX" className="h-full w-full object-cover" />
+              <img src={logoVx} alt="VidyaX" className="h-full w-full object-cover" />
             </span>
             <div>
               <div className="text-[11px] font-bold uppercase tracking-[0.2em] text-background/60">

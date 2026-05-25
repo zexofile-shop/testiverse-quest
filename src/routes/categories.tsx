@@ -1,6 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useMemo } from "react";
 import { fetchTests } from "@/lib/testApi";
 import { buildCategories } from "@/lib/categories";
 import { Navbar } from "@/components/site/Navbar";
@@ -11,12 +10,12 @@ import logoVx from "@/assets/logo-vx.jpg";
 export const Route = createFileRoute("/categories")({
   head: () => ({
     meta: [
-      { title: "All Categories — AdhyayX by EduSpark" },
+      { title: "All Categories — VidyaX by EduSpark" },
       {
         name: "description",
         content: "Browse all test categories — JEE, NEET, GATE, Class 10 boards & more.",
       },
-      { property: "og:title", content: "All Categories — AdhyayX" },
+      { property: "og:title", content: "All Categories — VidyaX" },
       { property: "og:description", content: "Pick a stream to see its mock tests." },
     ],
   }),
@@ -25,7 +24,7 @@ export const Route = createFileRoute("/categories")({
 
 function CategoriesPage() {
   const { data: tests, isLoading } = useQuery({ queryKey: ["tests"], queryFn: fetchTests });
-  const categories = useMemo(() => buildCategories(tests ?? []), [tests]);
+  const categories = buildCategories(tests ?? []);
 
   return (
     <div className="min-h-screen bg-background">
@@ -71,7 +70,7 @@ function CategoriesPage() {
               >
                 <div className="flex items-start justify-between gap-2">
                   <span className="inline-flex h-10 w-10 items-center justify-center overflow-hidden rounded-xl ring-2 ring-ink shadow-soft sm:h-12 sm:w-12">
-                    <img src={logoVx} alt="AdhyayX" className="h-full w-full object-cover" />
+                    <img src={logoVx} alt="VidyaX" className="h-full w-full object-cover" />
                   </span>
                   <span className="inline-flex items-center gap-1 rounded-full bg-foreground px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-background tabular-nums">
                     {c.count}

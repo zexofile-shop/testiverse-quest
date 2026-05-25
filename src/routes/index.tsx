@@ -1,6 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useMemo } from "react";
 import { fetchTests } from "@/lib/testApi";
 import { buildCategories } from "@/lib/categories";
 import { Navbar } from "@/components/site/Navbar";
@@ -20,13 +19,13 @@ import logoVx from "@/assets/logo-vx.jpg";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "AdhyayX by EduSpark — Smart Test Series for JEE, NEET & GATE" },
+      { title: "VidyaX by EduSpark — Smart Test Series for JEE, NEET & GATE" },
       {
         name: "description",
         content:
           "Practice with exam-grade mock tests for Class 10, 11/12 JEE, NEET and GATE. Full-screen test mode, instant scoring, real exam feel.",
       },
-      { property: "og:title", content: "AdhyayX by EduSpark — Smart Test Series" },
+      { property: "og:title", content: "VidyaX by EduSpark — Smart Test Series" },
       {
         property: "og:description",
         content: "Exam-grade mocks for JEE, NEET, GATE & school exams.",
@@ -38,7 +37,7 @@ export const Route = createFileRoute("/")({
 
 function HomePage() {
   const { data: tests, isLoading } = useQuery({ queryKey: ["tests"], queryFn: fetchTests });
-  const categories = useMemo(() => buildCategories(tests ?? []), [tests]);
+  const categories = buildCategories(tests ?? []);
   const totalTests = tests?.length ?? 0;
 
   return (
@@ -53,7 +52,7 @@ function HomePage() {
             <div style={{ animation: "fade-up 0.5s both" }}>
               <span className="inline-flex items-center gap-2 rounded-full border-2 border-ink/10 bg-card px-3 py-1.5 text-xs font-bold uppercase tracking-wider text-foreground shadow-soft">
                 <GraduationCap className="h-3.5 w-3.5 text-primary" />
-                AdhyayX · an EduSpark initiative
+                VidyaX · an EduSpark initiative
               </span>
               <h1 className="mt-5 font-display text-4xl font-bold leading-[1.02] tracking-tight text-foreground sm:text-5xl lg:text-6xl">
                 Crack <span className="text-primary">JEE, NEET, boards</span> &amp; other
@@ -111,7 +110,7 @@ function HomePage() {
                 <div className="relative flex items-center gap-4">
                   <img
                     src={logoVx}
-                    alt="AdhyayX"
+                    alt="VidyaX"
                     className="h-16 w-16 rounded-2xl ring-2 ring-background/30"
                   />
                   <div>
@@ -119,7 +118,7 @@ function HomePage() {
                       The platform
                     </div>
                     <div className="font-display text-2xl font-bold">
-                      Adhyay<span className="text-primary-glow">X</span>
+                      Vidya<span className="text-primary-glow">X</span>
                     </div>
                     <div className="text-xs font-semibold text-background/70">
                       an EduSpark initiative
@@ -156,7 +155,7 @@ function HomePage() {
         <div className="mx-auto max-w-7xl px-5 sm:px-6">
           <div className="mx-auto max-w-2xl text-center">
             <div className="text-xs font-bold uppercase tracking-[0.2em] text-primary">
-              Why AdhyayX
+              Why VidyaX
             </div>
             <h2 className="mt-2 font-display text-3xl font-bold tracking-tight sm:text-4xl">
               Built like the actual exam.
@@ -229,7 +228,7 @@ function HomePage() {
             </div>
             <div className="flex shrink-0 items-center gap-3">
               <span className="inline-flex h-12 w-12 items-center justify-center overflow-hidden rounded-full bg-background ring-2 ring-background/30 shadow-soft">
-                <img src={logoVx} alt="AdhyayX" className="h-full w-full object-cover" />
+                <img src={logoVx} alt="VidyaX" className="h-full w-full object-cover" />
               </span>
               <Link
                 to="/categories"
@@ -261,7 +260,7 @@ function HomePage() {
             },
             {
               q: "Does the test run in full-screen?",
-              a: "Yes. The moment you hit Start Test, AdhyayX goes full-screen for a distraction-free exam feel. Press Esc anytime to exit.",
+              a: "Yes. The moment you hit Start Test, VidyaX goes full-screen for a distraction-free exam feel. Press Esc anytime to exit.",
             },
             {
               q: "Can I navigate between questions freely?",
