@@ -690,8 +690,8 @@ function IntroScreen({
   onStart: () => void;
 }) {
   return (
-    <div className="min-h-screen bg-surface">
-      <div className="mx-auto w-full max-w-5xl px-0 pb-6 pt-3 sm:px-6 sm:pb-10 sm:pt-6">
+    <div className="min-h-screen bg-card">
+      <div className="mx-auto w-full max-w-5xl px-0 pb-0 pt-3 sm:px-6 sm:pb-10 sm:pt-6">
         <div className="px-4 sm:px-0">
           <Link
             to="/category/$stream"
