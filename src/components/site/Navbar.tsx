@@ -1,12 +1,12 @@
 import { Link } from "@tanstack/react-router";
-import { Brand } from "./Brand";
+import { BrandAdhyay } from "./BrandAdhyay";
 
 export function Navbar() {
   return (
     <header className="sticky top-0 z-40 w-full border-b-2 border-ink/10 bg-background/85 backdrop-blur-xl">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6">
         <Link to="/" className="transition-transform hover:scale-[1.02]">
-          <Brand />
+          <BrandAdhyay />
         </Link>
         <nav className="hidden items-center gap-7 text-sm font-semibold text-muted-foreground md:flex">
           <Link to="/" className="hover:text-foreground transition-colors" activeOptions={{ exact: true }} activeProps={{ className: "text-foreground" }}>Home</Link>
