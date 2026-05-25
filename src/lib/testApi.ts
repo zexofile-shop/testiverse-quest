@@ -62,7 +62,13 @@ export async function fetchQuestions(testId: string): Promise<Question[]> {
     { headers },
   );
   if (!res.ok) throw new Error("Failed to load questions");
-  return res.json();
+  const data: Question[] = await res.json();
+  // Override `correct` with the locally bundled answer key when available
+  // so results are 100% accurate regardless of what the server returns.
+  return data.map((q) => {
+    const key = ANSWER_KEY[q.id];
+    return key ? { ...q, correct: key } : q;
+  });
 }
 
 /**
