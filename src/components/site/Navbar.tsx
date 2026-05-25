@@ -9,10 +9,27 @@ export function Navbar() {
           <BrandAdhyay />
         </Link>
         <nav className="hidden items-center gap-7 text-sm font-semibold text-muted-foreground md:flex">
-          <Link to="/" className="hover:text-foreground transition-colors" activeOptions={{ exact: true }} activeProps={{ className: "text-foreground" }}>Home</Link>
-          <Link to="/categories" className="hover:text-foreground transition-colors" activeProps={{ className: "text-foreground" }}>Categories</Link>
-          <a href="#features" className="hover:text-foreground transition-colors">Features</a>
-          <a href="#faq" className="hover:text-foreground transition-colors">FAQ</a>
+          <Link
+            to="/"
+            className="hover:text-foreground transition-colors"
+            activeOptions={{ exact: true }}
+            activeProps={{ className: "text-foreground" }}
+          >
+            Home
+          </Link>
+          <Link
+            to="/categories"
+            className="hover:text-foreground transition-colors"
+            activeProps={{ className: "text-foreground" }}
+          >
+            Categories
+          </Link>
+          <a href="#features" className="hover:text-foreground transition-colors">
+            Features
+          </a>
+          <a href="#faq" className="hover:text-foreground transition-colors">
+            FAQ
+          </a>
         </nav>
         <Link
           to="/categories"

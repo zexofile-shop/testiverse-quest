@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
+import { useMemo } from "react";
 import { fetchTests } from "@/lib/testApi";
 import { buildCategories } from "@/lib/categories";
 import { Navbar } from "@/components/site/Navbar";
@@ -34,7 +35,7 @@ export const Route = createFileRoute("/")({
 
 function HomePage() {
   const { data: tests, isLoading } = useQuery({ queryKey: ["tests"], queryFn: fetchTests });
-  const categories = buildCategories(tests ?? []);
+  const categories = useMemo(() => buildCategories(tests ?? []), [tests]);
   const totalTests = tests?.length ?? 0;
 
   return (
@@ -78,13 +79,23 @@ function HomePage() {
 
               <div className="mt-10 flex max-w-md flex-wrap gap-x-8 gap-y-4 text-left">
                 {[
-                  { k: isLoading ? "…" : String(totalTests || 0), v: totalTests === 1 ? "Active test" : "Active tests" },
-                  { k: isLoading ? "…" : String(categories.length || 0), v: categories.length === 1 ? "Category" : "Categories" },
+                  {
+                    k: isLoading ? "…" : String(totalTests || 0),
+                    v: totalTests === 1 ? "Active test" : "Active tests",
+                  },
+                  {
+                    k: isLoading ? "…" : String(categories.length || 0),
+                    v: categories.length === 1 ? "Category" : "Categories",
+                  },
                   { k: "Free", v: "No signup needed" },
                 ].map((s) => (
                   <div key={s.v}>
-                    <div className="font-display text-3xl font-bold text-foreground tabular-nums">{s.k}</div>
-                    <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{s.v}</div>
+                    <div className="font-display text-3xl font-bold text-foreground tabular-nums">
+                      {s.k}
+                    </div>
+                    <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                      {s.v}
+                    </div>
                   </div>
                 ))}
               </div>
@@ -116,7 +127,10 @@ function HomePage() {
                     { icon: BarChart3, label: "Instant score breakdown" },
                     { icon: ShieldCheck, label: "No signup needed" },
                   ].map((f) => (
-                    <div key={f.label} className="flex items-center gap-2 rounded-xl border border-background/15 bg-background/5 p-3">
+                    <div
+                      key={f.label}
+                      className="flex items-center gap-2 rounded-xl border border-background/15 bg-background/5 p-3"
+                    >
                       <f.icon className="h-4 w-4 text-primary-glow" />
                       <span className="text-xs font-semibold">{f.label}</span>
                     </div>
@@ -148,7 +162,11 @@ function HomePage() {
 
           <div className="mt-10 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3">
             {[
-              { icon: Maximize, title: "Full-screen mode", desc: "Distraction-free, real exam feel." },
+              {
+                icon: Maximize,
+                title: "Full-screen mode",
+                desc: "Distraction-free, real exam feel.",
+              },
               { icon: Timer, title: "Live timer", desc: "Countdown with auto-submit." },
               { icon: Brain, title: "Smart navigation", desc: "Prev/Next + palette drawer." },
               { icon: BarChart3, title: "Instant scoring", desc: "Subject-wise breakdown." },
@@ -164,7 +182,9 @@ function HomePage() {
                   <f.icon className="h-4 w-4" />
                 </div>
                 <h3 className="mt-2.5 font-display text-sm font-bold sm:text-base">{f.title}</h3>
-                <p className="mt-1 text-xs leading-snug text-muted-foreground sm:text-[13px]">{f.desc}</p>
+                <p className="mt-1 text-xs leading-snug text-muted-foreground sm:text-[13px]">
+                  {f.desc}
+                </p>
               </div>
             ))}
           </div>
@@ -251,7 +271,6 @@ function HomePage() {
           ))}
         </div>
       </section>
-
 
       <Footer />
     </div>

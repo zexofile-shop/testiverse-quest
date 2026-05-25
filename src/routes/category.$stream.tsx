@@ -53,7 +53,9 @@ function CategoryPage() {
               <img src={logoVx} alt="AdhyayX" className="h-full w-full object-cover" />
             </span>
             <div>
-              <div className="text-[11px] font-bold uppercase tracking-[0.2em] text-background/60">Category</div>
+              <div className="text-[11px] font-bold uppercase tracking-[0.2em] text-background/60">
+                Category
+              </div>
               <h1 className="font-display text-3xl font-bold sm:text-4xl">{meta.label}</h1>
             </div>
           </div>
@@ -75,7 +77,10 @@ function CategoryPage() {
         {isLoading ? (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="h-48 animate-pulse rounded-2xl border-2 border-ink/10 bg-muted" />
+              <div
+                key={i}
+                className="h-48 animate-pulse rounded-2xl border-2 border-ink/10 bg-muted"
+              />
             ))}
           </div>
         ) : filtered.length === 0 ? (
