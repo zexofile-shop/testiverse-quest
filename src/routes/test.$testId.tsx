@@ -866,11 +866,37 @@ function ResultScreen({
   const attempted = correct + wrong;
   const accuracy = attempted > 0 ? Math.round((correct / attempted) * 100) : 0;
 
+  // Keep the entire document white so no surface band shows below the report on mobile.
+  useEffect(() => {
+    const prevHtml = document.documentElement.style.backgroundColor;
+    const prevBody = document.body.style.backgroundColor;
+    document.documentElement.style.backgroundColor = "var(--card)";
+    document.body.style.backgroundColor = "var(--card)";
+    return () => {
+      document.documentElement.style.backgroundColor = prevHtml;
+      document.body.style.backgroundColor = prevBody;
+    };
+  }, []);
+
+  const [downloading, setDownloading] = useState(false);
+  const handleDownload = async () => {
+    try {
+      setDownloading(true);
+      const { generateResultPdf } = await import("@/lib/resultPdf");
+      await generateResultPdf({ test, questions, answers });
+    } catch (e) {
+      console.error(e);
+      window.alert("Sorry, could not generate the PDF. Please try again.");
+    } finally {
+      setDownloading(false);
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-card">
-      <div className="mx-auto w-full max-w-6xl px-0 pb-10 pt-0 sm:px-6 sm:pb-14 sm:pt-6">
+    <div className="min-h-screen bg-card" style={{ minHeight: "100dvh" }}>
+      <div className="mx-auto w-full max-w-6xl px-0 pb-0 pt-0 sm:px-6 sm:pb-14 sm:pt-6">
         <div
-          className="overflow-hidden border-b-2 border-ink/10 bg-card shadow-elevated sm:rounded-3xl sm:border-2"
+          className="overflow-hidden bg-card sm:rounded-3xl sm:border-2 sm:border-ink/10 sm:shadow-elevated"
           style={{ animation: "fade-up 0.4s both" }}
         >
           {/* HEADER */}
