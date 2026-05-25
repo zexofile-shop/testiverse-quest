@@ -14,19 +14,19 @@ import {
   Maximize,
   GraduationCap,
 } from "lucide-react";
-import logoVx from "@/assets/logo-vx.jpg";
+import logoAdhyay from "@/assets/logo-adhyayx.png";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "VidyaX by EduSpark — Smart Test Series for JEE, NEET & GATE" },
+      { title: "AdhyayX — Powered by EduSpark · Smart Test Series for JEE, NEET & Boards" },
       {
         name: "description",
         content:
-          "Practice with exam-grade mock tests for Class 10, 11/12 JEE, NEET and GATE. Full-screen test mode, instant scoring, real exam feel.",
+          "Har Adhyay, Ek Nayi Jeet. Exam-grade mock tests for JEE, NEET, boards & other competitive exams. Full-screen mode, instant scoring, real exam feel.",
       },
-      { property: "og:title", content: "VidyaX by EduSpark — Smart Test Series" },
-      { property: "og:description", content: "Exam-grade mocks for JEE, NEET, GATE & school exams." },
+      { property: "og:title", content: "AdhyayX — Powered by EduSpark" },
+      { property: "og:description", content: "Har Adhyay, Ek Nayi Jeet. Exam-grade mocks for JEE, NEET & boards." },
     ],
   }),
   component: HomePage,
@@ -49,12 +49,15 @@ function HomePage() {
             <div style={{ animation: "fade-up 0.5s both" }}>
               <span className="inline-flex items-center gap-2 rounded-full border-2 border-ink/10 bg-card px-3 py-1.5 text-xs font-bold uppercase tracking-wider text-foreground shadow-soft">
                 <GraduationCap className="h-3.5 w-3.5 text-primary" />
-                VidyaX · an EduSpark initiative
+                AdhyayX · Powered by EduSpark
               </span>
               <h1 className="mt-5 font-display text-[26px] font-bold leading-[1.12] tracking-tight text-foreground sm:text-4xl lg:text-[44px] lg:leading-[1.08]">
                 Crack <span className="text-primary">JEE, NEET, boards &amp; other competitive exams</span> with exam-grade mocks.
               </h1>
-              <p className="mt-5 max-w-xl text-base text-muted-foreground sm:text-lg">
+              <p className="mt-3 font-display text-base italic text-primary sm:text-lg">
+                “Har Adhyay, Ek Nayi Jeet.”
+              </p>
+              <p className="mt-4 max-w-xl text-base text-muted-foreground sm:text-lg">
                 Pick your class, pick your stream, attempt full-screen tests that feel like the real exam. Instant scoring. No distractions.
               </p>
               <div className="mt-7 flex flex-wrap items-center gap-3">
@@ -93,15 +96,17 @@ function HomePage() {
               <div className="relative overflow-hidden rounded-3xl border-2 border-ink bg-foreground p-8 text-background shadow-elevated">
                 <div className="absolute inset-0 grid-bg opacity-20" />
                 <div className="relative flex items-center gap-4">
-                  <img src={logoVx} alt="VidyaX" className="h-16 w-16 rounded-2xl ring-2 ring-background/30" />
+                  <span className="inline-flex h-16 w-16 items-center justify-center overflow-hidden rounded-2xl bg-white ring-2 ring-background/30 shadow-soft">
+                    <img src={logoAdhyay} alt="AdhyayX" className="h-full w-full object-contain p-1" />
+                  </span>
                   <div>
                     <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-background/60">
                       The platform
                     </div>
                     <div className="font-display text-2xl font-bold">
-                      Vidya<span className="text-primary-glow">X</span>
+                      Adhyay<span className="text-primary-glow">X</span>
                     </div>
-                    <div className="text-xs font-semibold text-background/70">an EduSpark initiative</div>
+                    <div className="text-xs font-semibold text-background/70">Powered by EduSpark</div>
                   </div>
                 </div>
                 <div className="relative mt-6 grid grid-cols-2 gap-3">
@@ -131,7 +136,7 @@ function HomePage() {
         <div className="mx-auto max-w-7xl px-5 sm:px-6">
           <div className="mx-auto max-w-2xl text-center">
             <div className="text-xs font-bold uppercase tracking-[0.2em] text-primary">
-              Why VidyaX
+              Why AdhyayX
             </div>
             <h2 className="mt-2 font-display text-3xl font-bold tracking-tight sm:text-4xl">
               Built like the actual exam.
@@ -197,8 +202,8 @@ function HomePage() {
               </p>
             </div>
             <div className="flex shrink-0 items-center gap-3">
-              <span className="inline-flex h-12 w-12 items-center justify-center overflow-hidden rounded-full bg-background ring-2 ring-background/30 shadow-soft">
-                <img src={logoVx} alt="VidyaX" className="h-full w-full object-cover" />
+              <span className="inline-flex h-12 w-12 items-center justify-center overflow-hidden rounded-full bg-white ring-2 ring-background/30 shadow-soft">
+                <img src={logoAdhyay} alt="AdhyayX" className="h-full w-full object-contain p-1" />
               </span>
               <Link
                 to="/categories"
