@@ -66,8 +66,61 @@ async function normalizeCatastrophicSsrResponse(response: Response): Promise<Res
   return brandedErrorResponse();
 }
 
+async function handleAdhyayxProxy(request: Request): Promise<Response | null> {
+  const url = new URL(request.url);
+  if (!url.pathname.startsWith("/api/v1/adhyayx/")) {
+    return null;
+  }
+
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseKey =
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+  if (!supabaseUrl || !supabaseKey) {
+    return new Response(JSON.stringify({ error: "Supabase credentials missing" }), {
+      status: 500,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+
+  const relativePath = url.pathname.replace("/api/v1/adhyayx/", "");
+  const targetUrl = `${supabaseUrl}/rest/v1/${relativePath}${url.search}`;
+
+  const headers = new Headers(request.headers);
+  headers.set("apikey", supabaseKey);
+  headers.set("Authorization", `Bearer ${supabaseKey}`);
+
+  try {
+    const response = await fetch(targetUrl, {
+      method: request.method,
+      headers,
+      body:
+        request.method !== "GET" && request.method !== "HEAD"
+          ? await request.arrayBuffer()
+          : undefined,
+    });
+
+    const data = await response.text();
+    return new Response(data, {
+      status: response.status,
+      headers: {
+        "Content-Type": response.headers.get("Content-Type") || "application/json",
+      },
+    });
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : String(error);
+    return new Response(JSON.stringify({ error: message }), {
+      status: 500,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+}
+
 export default {
   async fetch(request: Request, env: unknown, ctx: unknown) {
+    const proxyResponse = await handleAdhyayxProxy(request);
+    if (proxyResponse) return proxyResponse;
+
     try {
       const handler = await getServerEntry();
       const response = await handler.fetch(request, env, ctx);

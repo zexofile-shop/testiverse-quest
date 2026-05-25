@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   correctIndex,
   detectOptionStyle,
@@ -11,6 +11,7 @@ import {
   type Question,
   type Test,
 } from "@/lib/testApi";
+import { submitTestResult } from "@/lib/testResults";
 import {
   ArrowLeft,
   ArrowRight,
@@ -39,16 +40,26 @@ type Status = "answered" | "review" | "visited" | "unseen";
 
 function enterFullscreen() {
   try {
-    const el: any = document.documentElement;
+    const el = document.documentElement as HTMLElement & {
+      requestFullscreen?: () => Promise<void>;
+      webkitRequestFullscreen?: () => Promise<void>;
+    };
     (el.requestFullscreen || el.webkitRequestFullscreen)?.call(el);
-  } catch {}
+  } catch (err) {
+    console.error("Fullscreen request failed", err);
+  }
 }
 function exitFullscreen() {
   try {
     if (document.fullscreenElement) {
-      (document.exitFullscreen || (document as any).webkitExitFullscreen)?.call(document);
+      const doc = document as Document & {
+        webkitExitFullscreen?: () => Promise<void>;
+      };
+      (doc.exitFullscreen || doc.webkitExitFullscreen)?.call(doc);
     }
-  } catch {}
+  } catch (err) {
+    console.error("Exit fullscreen failed", err);
+  }
 }
 
 function TestRunner() {
@@ -77,21 +88,6 @@ function TestRunner() {
   const [reviewed, setReviewed] = useState<boolean[]>([]);
   const [visited, setVisited] = useState<boolean[]>([]);
   const [secondsLeft, setSecondsLeft] = useState(0);
-
-  const statuses: Status[] = useMemo(() => {
-    return answers.map((a, i) => {
-      if (reviewed[i]) return "review";
-      if (a !== null && a !== undefined) return "answered";
-      if (visited[i]) return "visited";
-      return "unseen";
-    });
-  }, [answers, reviewed, visited]);
-
-  const answeredCount = useMemo(
-    () => answers.filter((a) => a !== null && a !== undefined).length,
-    [answers],
-  );
-
   const [paletteOpen, setPaletteOpen] = useState(false);
   const submittedRef = useRef(false);
   const hydratedRef = useRef(false);
@@ -154,21 +150,63 @@ function TestRunner() {
   useEffect(() => {
     if (phase !== "active") return;
     if (secondsLeft <= 0) {
-      if (!submittedRef.current) {
-        submittedRef.current = true;
-        exitFullscreen();
-        setPhase("result");
-      }
+      handleFinish();
       return;
     }
     const t = setTimeout(() => setSecondsLeft((s) => s - 1), 1000);
     return () => clearTimeout(t);
-  }, [phase, secondsLeft]);
+  }, [phase, secondsLeft, handleFinish]);
 
   // Exit fullscreen when leaving active
   useEffect(() => {
     if (phase !== "active") exitFullscreen();
   }, [phase]);
+
+  const handleFinish = useCallback(async () => {
+    if (submittedRef.current) return;
+    submittedRef.current = true;
+
+    // Calculate score for submission
+    const totalMarks = questions.reduce((s, q) => s + (q.marks || 0), 0);
+    const results = questions.map((q, i) => {
+      const opts = parseOptions(q.options);
+      const correctIdx = correctIndex(q.correct, opts);
+      const userIdx = answers[i] ?? null;
+      let delta = 0;
+      let isCorrect = false;
+      if (userIdx !== null && userIdx !== undefined) {
+        if (correctIdx >= 0 && userIdx === correctIdx) {
+          delta = q.marks || 0;
+          isCorrect = true;
+        } else {
+          delta = -(q.negative_marks || 0);
+        }
+      }
+      return { delta, correct: isCorrect, answered: userIdx !== null };
+    });
+
+    const score = results.reduce((s, r) => s + r.delta, 0);
+    const correctCount = results.filter((r) => r.correct).length;
+    const answeredCount = results.filter((r) => r.answered).length;
+    const accuracy = answeredCount > 0 ? Math.round((correctCount / answeredCount) * 100) : 0;
+    const timeTaken = (test?.duration_minutes ?? 0) * 60 - secondsLeft;
+
+    try {
+      await submitTestResult({
+        test_id: testId,
+        score,
+        total_marks: totalMarks,
+        answers: answers.map((a, i) => ({ question_id: questions[i].id, selected_option: a })),
+        accuracy,
+        time_taken_seconds: timeTaken,
+      });
+    } catch (err) {
+      console.error("Failed to submit results:", err);
+    }
+
+    exitFullscreen();
+    setPhase("result");
+  }, [test?.duration_minutes, secondsLeft, testId, questions, answers]);
 
   if (testsQuery.isLoading || questionsQuery.isLoading) return <FullPageLoader />;
 
@@ -183,54 +221,6 @@ function TestRunner() {
     );
   }
 
-  if (phase === "intro") {
-    return (
-      <IntroScreen
-        test={test}
-        questionCount={questions.length}
-        onStart={() => {
-          setSecondsLeft(test.duration_minutes * 60);
-          setPhase("active");
-          // small delay so React commits before requesting fullscreen
-          setTimeout(enterFullscreen, 50);
-        }}
-      />
-    );
-  }
-
-  if (phase === "result") {
-    return (
-      <ResultScreen
-        test={test}
-        questions={questions}
-        answers={answers}
-        onRetake={() => {
-          try {
-            localStorage.removeItem(storageKey);
-          } catch {
-            /* ignore */
-          }
-          hydratedRef.current = false;
-          setAnswers([]);
-          setReviewed([]);
-          setVisited([]);
-          setCurrent(0);
-          submittedRef.current = false;
-          setPhase("intro");
-        }}
-        onHome={() => {
-          try {
-            localStorage.removeItem(storageKey);
-          } catch {
-            /* ignore */
-          }
-          navigate({ to: "/categories" });
-        }}
-      />
-    );
-  }
-
-  // ===== ACTIVE =====
   const q = questions[current];
   const opts = parseOptions(q.options);
   const optionStyle = detectOptionStyle(opts);
@@ -252,71 +242,29 @@ function TestRunner() {
     });
   };
 
-  const go = useCallback(
-    (idx: number) => {
-      setCurrent(idx);
-      setVisited((prev) => {
-        if (prev[idx]) return prev;
-        const next = [...prev];
-        next[idx] = true;
-        return next;
-      });
-      setPaletteOpen(false);
-    },
-    [setCurrent, setVisited, setPaletteOpen],
-  );
+  const go = (idx: number) => {
+    setCurrent(idx);
+    setVisited((prev) => {
+      if (prev[idx]) return prev;
+      const next = [...prev];
+      next[idx] = true;
+      return next;
+    });
+    setPaletteOpen(false);
+  };
 
-  const toggleReview = useCallback(() => {
+  const toggleReview = () => {
     setReviewed((prev) => {
       const next = [...prev];
       next[current] = !next[current];
       return next;
     });
-  }, [current, setReviewed]);
+  };
 
-  const submit = useCallback(async () => {
-    // Calculate results for submission
-    const rows = questions.map((q, i) => {
-      const opts = parseOptions(q.options);
-      const correctIdx = correctIndex(q.correct, opts);
-      const userIdx = answers[i] ?? null;
-      let delta = 0;
-      let state = "skipped";
-      if (userIdx !== null && userIdx !== undefined) {
-        if (correctIdx >= 0 && userIdx === correctIdx) {
-          delta = q.marks || 0;
-          state = "correct";
-        } else {
-          delta = -(q.negative_marks || 0);
-          state = "wrong";
-        }
-      }
-      return { delta, state };
-    });
-
-    const score = rows.reduce((s, r) => s + r.delta, 0);
-    const totalMarks = questions.reduce((s, q) => s + (q.marks || 0), 0);
-    const correct = rows.filter((r) => r.state === "correct").length;
-    const attempted = rows.filter((r) => r.state !== "skipped").length;
-    const accuracy = attempted > 0 ? (correct / attempted) * 100 : 0;
-
-    try {
-      const { submitTestResult } = await import("@/lib/testResults");
-      await submitTestResult({
-        test_id: testId,
-        score,
-        total_marks: totalMarks,
-        answers: answers,
-        accuracy,
-        time_taken_seconds: test.duration_minutes * 60 - secondsLeft,
-      });
-    } catch (err) {
-      console.error("Failed to sync results:", err);
-    }
-
-    exitFullscreen();
-    setPhase("result");
-  }, [questions, answers, testId, test, secondsLeft, setPhase]);
+  const submit = () => {
+    if (!window.confirm("Are you sure you want to submit the test?")) return;
+    handleFinish();
+  };
 
   const quit = () => {
     if (!window.confirm("Quit this test? Your progress will be lost.")) return;
@@ -335,6 +283,15 @@ function TestRunner() {
     setPhase("intro");
     navigate({ to: "/categories" });
   };
+
+  const statuses: Status[] = answers.map((a, i) => {
+    if (reviewed[i]) return "review";
+    if (a !== null && a !== undefined) return "answered";
+    if (visited[i]) return "visited";
+    return "unseen";
+  });
+
+  const answeredCount = answers.filter((a) => a !== null && a !== undefined).length;
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
@@ -602,7 +559,7 @@ function TestRunner() {
   );
 }
 
-const PaletteContent = memo(function PaletteContent({
+function PaletteContent({
   questions,
   current,
   statuses,
@@ -618,21 +575,18 @@ const PaletteContent = memo(function PaletteContent({
   onSubmit: () => void;
 }) {
   // Group by subject, preserving the order subjects first appear in.
-  const groups = useMemo(() => {
-    const res: { subject: string; items: { idx: number }[] }[] = [];
-    const seen = new Map<string, number>();
-    questions.forEach((q, idx) => {
-      const subj = q.subject || "General";
-      let gi = seen.get(subj);
-      if (gi === undefined) {
-        gi = res.length;
-        seen.set(subj, gi);
-        res.push({ subject: subj, items: [] });
-      }
-      res[gi].items.push({ idx });
-    });
-    return res;
-  }, [questions]);
+  const groups: { subject: string; items: { idx: number }[] }[] = [];
+  const seen = new Map<string, number>();
+  questions.forEach((q, idx) => {
+    const subj = q.subject || "General";
+    let gi = seen.get(subj);
+    if (gi === undefined) {
+      gi = groups.length;
+      seen.set(subj, gi);
+      groups.push({ subject: subj, items: [] });
+    }
+    groups[gi].items.push({ idx });
+  });
 
   return (
     <>
@@ -692,7 +646,7 @@ const PaletteContent = memo(function PaletteContent({
       </button>
     </>
   );
-});
+}
 
 /**
  * Colour-codes a subject chip. Matches Physics/Chemistry/Biology/Maths
@@ -1306,7 +1260,7 @@ function CenterMessage({
         <h1 className="font-display text-2xl font-bold">{title}</h1>
         <p className="mt-2 text-sm text-muted-foreground">{body}</p>
         <Link
-          to={actionTo as any}
+          to={actionTo as "/"}
           className="mt-6 inline-flex items-center gap-2 rounded-full bg-primary px-5 py-3 text-sm font-bold text-primary-foreground shadow-glow"
         >
           {actionLabel}

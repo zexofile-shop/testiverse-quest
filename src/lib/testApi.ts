@@ -25,85 +25,86 @@ export interface Question {
 }
 
 export async function fetchTests(): Promise<Test[]> {
-  const data = await proxySupabase({
-    method: "GET",
-    path: "rest/v1/tests",
-    search: "?select=*&order=stream.asc,created_at.desc",
-  });
+  const response = await fetch("/api/v1/adhyayx/tests?select=*&order=stream.asc,created_at.desc");
+  if (!response.ok) throw new Error("Failed to fetch tests");
+  const data = await response.json();
   return (data as Test[]).filter(
     (t) => !/testing/i.test(t.name ?? "") && !/testing/i.test(t.description ?? ""),
   );
 }
 
 export async function fetchQuestions(testId: string): Promise<Question[]> {
-  return await proxySupabase({
-    method: "GET",
-    path: "rest/v1/questions",
-    search: `?select=id,question_text,image,options,subject,marks,negative_marks,type,correct&test_id=eq.${testId}`,
-  });
+  const response = await fetch(
+    `/api/v1/adhyayx/questions?select=id,question_text,image,options,subject,marks,negative_marks,type,correct&test_id=eq.${testId}`,
+  );
+  if (!response.ok) throw new Error("Failed to fetch questions");
+  return await response.json();
 }
 
-export function normalizeSubject(subject: string | null | undefined, stream: string | null | undefined): string {
-    const raw = String(subject ?? "").trim();
-    const s = raw.toLowerCase();
-    const st = String(stream ?? "").toLowerCase();
+export function normalizeSubject(
+  subject: string | null | undefined,
+  stream: string | null | undefined,
+): string {
+  const raw = String(subject ?? "").trim();
+  const s = raw.toLowerCase();
+  const st = String(stream ?? "").toLowerCase();
 
-    let canonical = raw || "General";
-    if (s.includes("phys")) canonical = "Physics";
-    else if (s.includes("chem")) canonical = "Chemistry";
-    else if (s.includes("bot")) canonical = "Botany";
-    else if (s.includes("zoo")) canonical = "Zoology";
-    else if (s.includes("bio")) canonical = "Biology";
-    else if (s.includes("math")) canonical = "Mathematics";
-    else if (s.includes("eng")) canonical = "English";
+  let canonical = raw || "General";
+  if (s.includes("phys")) canonical = "Physics";
+  else if (s.includes("chem")) canonical = "Chemistry";
+  else if (s.includes("bot")) canonical = "Botany";
+  else if (s.includes("zoo")) canonical = "Zoology";
+  else if (s.includes("bio")) canonical = "Biology";
+  else if (s.includes("math")) canonical = "Mathematics";
+  else if (s.includes("eng")) canonical = "English";
 
-    const isNeet = st.includes("neet");
-    const isJee = st.includes("jee");
-    if (isNeet && canonical === "Mathematics") return "Biology";
-    if (isJee && (canonical === "Biology" || canonical === "Botany" || canonical === "Zoology"))
-      return "Mathematics";
+  const isNeet = st.includes("neet");
+  const isJee = st.includes("jee");
+  if (isNeet && canonical === "Mathematics") return "Biology";
+  if (isJee && (canonical === "Biology" || canonical === "Botany" || canonical === "Zoology"))
+    return "Mathematics";
 
-    return canonical;
+  return canonical;
 }
 
 export function correctIndex(raw: string | null | undefined, opts: string[]): number {
-    if (!raw) return -1;
-    const v = String(raw).trim();
-    if (!v) return -1;
-    if (/^[A-Za-z]$/.test(v)) {
-      const idx = v.toUpperCase().charCodeAt(0) - 65;
-      return idx >= 0 && idx < opts.length ? idx : -1;
-    }
-    if (/^\d{1,2}$/.test(v)) {
-      const n = parseInt(v, 10);
-      if (n >= 1 && n <= opts.length) return n - 1;
-      if (n >= 0 && n < opts.length) return n;
-      return -1;
-    }
-    const match = opts.findIndex((o) => o.trim().toLowerCase() === v.toLowerCase());
-    return match;
+  if (!raw) return -1;
+  const v = String(raw).trim();
+  if (!v) return -1;
+  if (/^[A-Za-z]$/.test(v)) {
+    const idx = v.toUpperCase().charCodeAt(0) - 65;
+    return idx >= 0 && idx < opts.length ? idx : -1;
+  }
+  if (/^\d{1,2}$/.test(v)) {
+    const n = parseInt(v, 10);
+    if (n >= 1 && n <= opts.length) return n - 1;
+    if (n >= 0 && n < opts.length) return n;
+    return -1;
+  }
+  const match = opts.findIndex((o) => o.trim().toLowerCase() === v.toLowerCase());
+  return match;
 }
 
 export function parseOptions(raw: string | string[] | null | undefined): string[] {
-    let arr: unknown = raw;
-    if (typeof raw === "string") {
-      try {
-        arr = JSON.parse(raw);
-      } catch {
-        arr = [];
-      }
+  let arr: unknown = raw;
+  if (typeof raw === "string") {
+    try {
+      arr = JSON.parse(raw);
+    } catch {
+      arr = [];
     }
-    const list = Array.isArray(arr) ? arr.map((v) => String(v ?? "").trim()) : [];
-    const cleaned = list.filter((s) => s.length > 0);
-    if (cleaned.length === 0) return ["A", "B", "C", "D"];
-    return cleaned;
+  }
+  const list = Array.isArray(arr) ? arr.map((v) => String(v ?? "").trim()) : [];
+  const cleaned = list.filter((s) => s.length > 0);
+  if (cleaned.length === 0) return ["A", "B", "C", "D"];
+  return cleaned;
 }
 
 export function detectOptionStyle(opts: string[]): "letter" | "number" | "text" {
-    if (opts.length === 0) return "text";
-    const isAllLetters = opts.every((o) => /^[A-Za-z]$/.test(o));
-    if (isAllLetters) return "letter";
-    const isAllNumbers = opts.every((o) => /^\d{1,2}$/.test(o));
-    if (isAllNumbers) return "number";
-    return "text";
+  if (opts.length === 0) return "text";
+  const isAllLetters = opts.every((o) => /^[A-Za-z]$/.test(o));
+  if (isAllLetters) return "letter";
+  const isAllNumbers = opts.every((o) => /^\d{1,2}$/.test(o));
+  if (isAllNumbers) return "number";
+  return "text";
 }
