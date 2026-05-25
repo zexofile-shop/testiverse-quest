@@ -230,7 +230,7 @@ function HomePage() {
         <div className="mt-10 divide-y-2 divide-ink/10 rounded-2xl border-2 border-ink/10 bg-card">
           {[
             { q: "Do I need to sign up to attempt a test?", a: "No. Pick a category, open any test, and start instantly — no account, no email, no friction." },
-            { q: "Does the test run in full-screen?", a: "Yes. The moment you hit Start Test, VidyaX goes full-screen for a distraction-free exam feel. Press Esc anytime to exit." },
+            { q: "Does the test run in full-screen?", a: "Yes. The moment you hit Start Test, AdhyayX goes full-screen for a distraction-free exam feel. Press Esc anytime to exit." },
             { q: "Can I navigate between questions freely?", a: "Yes. Use the big Previous / Next buttons or open the palette drawer to jump anywhere in the paper." },
             { q: "What happens when time runs out?", a: "The test auto-submits with whatever answers you've marked and takes you straight to your detailed result." },
             { q: "Is my progress saved if I refresh?", a: "Yes. Your answers, marks-for-review and remaining time are saved locally so you can resume mid-test." },
