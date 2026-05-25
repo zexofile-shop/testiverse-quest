@@ -691,8 +691,20 @@ function IntroScreen({
   questionCount: number;
   onStart: () => void;
 }) {
+  // Paint the whole document white so no surface band shows below the card on mobile.
+  useEffect(() => {
+    const prevHtml = document.documentElement.style.backgroundColor;
+    const prevBody = document.body.style.backgroundColor;
+    document.documentElement.style.backgroundColor = "var(--card)";
+    document.body.style.backgroundColor = "var(--card)";
+    return () => {
+      document.documentElement.style.backgroundColor = prevHtml;
+      document.body.style.backgroundColor = prevBody;
+    };
+  }, []);
+
   return (
-    <div className="min-h-screen bg-card">
+    <div className="min-h-screen bg-card" style={{ minHeight: "100dvh" }}>
       <div className="mx-auto w-full max-w-5xl px-0 pb-0 pt-3 sm:px-6 sm:pb-10 sm:pt-6">
         <div className="px-4 sm:px-0">
           <Link
@@ -705,7 +717,7 @@ function IntroScreen({
         </div>
 
         <div
-          className="mt-3 overflow-hidden bg-card shadow-soft sm:mt-4 sm:rounded-2xl sm:border sm:border-ink/10"
+          className="mt-3 overflow-hidden bg-card sm:mt-4 sm:rounded-2xl sm:border sm:border-ink/10 sm:shadow-soft"
           style={{ animation: "fade-up 0.4s both" }}
         >
           <div className="relative bg-foreground p-6 text-background sm:p-9">
