@@ -1,4 +1,10 @@
-import { proxySupabase } from "@/utils/supabase/proxy";
+import answerKeyData from "@/data/answerKey.json";
+
+const SUPABASE_URL = "https://gaqyuylvawgoxuaevhsi.supabase.co";
+const SUPABASE_ANON_KEY =
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdhcXl1eWx2YXdnb3h1YWV2aHNpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTI0MDExNTQsImV4cCI6MjA2Nzk3NzE1NH0.tRJXi5vTSopCza_61sYu2ccOrk8LR7UvJ07JPP07OEI";
+
+const ANSWER_KEY = answerKeyData as Record<string, string>;
 
 export interface Test {
   id: string;
@@ -24,22 +30,35 @@ export interface Question {
   correct: string | null;
 }
 
-export async function fetchTests(): Promise<Test[]> {
-  const data = await proxySupabase({
-    method: "GET",
-    path: "rest/v1/tests",
-    search: "?select=*&order=stream.asc,created_at.desc",
+async function sb<T>(pathAndQuery: string): Promise<T> {
+  const res = await fetch(`${SUPABASE_URL}/${pathAndQuery}`, {
+    headers: {
+      apikey: SUPABASE_ANON_KEY,
+      Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+      "Accept-Profile": "public",
+    },
   });
-  return (data as Test[]).filter(
+  if (!res.ok) throw new Error(`Supabase error ${res.status}: ${await res.text()}`);
+  return (await res.json()) as T;
+}
+
+export async function fetchTests(): Promise<Test[]> {
+  const data = await sb<Test[]>(
+    "rest/v1/tests?select=*&status=eq.active&order=stream.asc,created_at.desc",
+  );
+  return data.filter(
     (t) => !/testing/i.test(t.name ?? "") && !/testing/i.test(t.description ?? ""),
   );
 }
 
 export async function fetchQuestions(testId: string): Promise<Question[]> {
-  return await proxySupabase({
-    method: "GET",
-    path: "rest/v1/questions",
-    search: `?select=id,question_text,image,options,subject,marks,negative_marks,type,correct&test_id=eq.${testId}`,
+  const data = await sb<Question[]>(
+    `rest/v1/questions?select=id,question_text,image,options,subject,marks,negative_marks,type,correct&test_id=eq.${testId}`,
+  );
+  // Override `correct` with bundled answer key for 100% accuracy
+  return data.map((q) => {
+    const fromKey = ANSWER_KEY[q.id];
+    return fromKey ? { ...q, correct: fromKey } : q;
   });
 }
 

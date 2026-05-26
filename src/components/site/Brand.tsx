@@ -14,15 +14,15 @@ export function Brand({
       <span
         className={`relative inline-flex ${dims} items-center justify-center overflow-hidden rounded-xl ring-2 ring-ink shadow-soft`}
       >
-        <img src={logo} alt="AdhyayX by EduSpark" className="h-full w-full object-cover" />
+        <img src={logo} alt="VidyaX" className="h-full w-full object-cover" />
       </span>
       <div className="leading-tight">
         <div className={`font-display ${title} font-bold tracking-tight text-foreground`}>
-          Adhyay<span className="text-primary">X</span>
+          Vidya<span className="text-primary">X</span>
         </div>
         {showSub && (
           <div className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-            by <span className="text-foreground">EduSpark</span>
+            Smart Mock Tests
           </div>
         )}
       </div>
